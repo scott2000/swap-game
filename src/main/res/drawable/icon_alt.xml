@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <path
+        android:fillColor="#ffffff"
+        android:strokeWidth="1"
+        android:pathData="M13.51 256C13.51 122.17 122.16 13.51 256 13.51C389.83 13.51 498.48 122.17 498.48
+256C498.48 389.83 389.83 498.49 256 498.49C122.16 498.49 13.51 389.83 13.51 256Z" />
+    <path
+        android:fillColor="#202020"
+        android:strokeWidth="1"
+        android:pathData="M462.98 256C462.98 370.24 370.23 462.98 256 462.98C141.77 462.98 49.03 370.24
+49.03 256C49.03 141.77 141.77 49.03 256 49.03C370.23 49.03 462.98 141.77 462.98
+256Z" />
+    <path
+        android:fillColor="#202020"
+        android:strokeWidth="1"
+        android:pathData="M462.98 256C462.98 370.24 370.23 462.98 256 462.98C141.77 462.98 49.02 370.24
+49.02 256C49.02 141.77 141.77 49.03 256 49.03C370.23 49.03 462.98 141.77 462.98
+256Z" />
+    <path
+        android:fillColor="#202020"
+        android:strokeWidth="1"
+        android:pathData="M462.98 256C462.98 370.24 370.23 462.98 256 462.98C141.77 462.98 49.03 370.24
+49.03 256C49.03 141.77 141.77 49.03 256 49.03C370.23 49.03 462.98 141.77 462.98
+256Z" />
+    <path
+        android:fillColor="#ffffff"
+        android:strokeWidth="1"
+        android:pathData="M411.23 256C411.23 341.68 341.67 411.24 256 411.24C170.32 411.24 100.77 341.68
+100.77 256C100.77 170.33 170.32 100.77 256 100.77C341.67 100.77 411.23 170.33
+411.23 256Z" />
+    <path
+        android:fillColor="#202020"
+        android:strokeWidth="1"
+        android:pathData="M333.62 262C333.62 304.84 298.84 339.62 256 339.62C213.16 339.62 178.38 304.84
+178.38 262C178.38 219.17 213.16 184.39 256 184.39C298.84 184.39 333.62 219.17
+333.62 262Z" />
+    <path
+        android:fillColor="#d82020"
+        android:strokeWidth="1"
+        android:pathData="M333.62 256C333.62 298.84 298.84 333.62 256 333.62C213.16 333.62 178.38 298.84
+178.38 256C178.38 213.17 213.16 178.39 256 178.39C298.84 178.39 333.62 213.17
+333.62 256Z" />
+</vector>
