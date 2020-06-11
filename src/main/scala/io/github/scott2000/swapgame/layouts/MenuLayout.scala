@@ -4,7 +4,21 @@ import org.scaloid.common._
 import android.content.Context
 
 object MenuLayout {
-  def title[LP <: ViewGroupLayoutParams[_, STextView]](text: String)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = STextView(text).textColor(TileType.strokeColor).textSize(Grid.titleSize).typeface(Grid.typeface).padding(Grid.tileSpacing)
+  def title[LP <: ViewGroupLayoutParams[_, STextView]](text: String)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
+    formatTitle(STextView(text))
+  }
+
+  def clickableTitle[LP <: ViewGroupLayoutParams[_, STextView]](text: String, callback: ViewOnClickListener)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
+    formatTitle(STextView(text, callback))
+  }
+
+  def formatTitle(textView: STextView): STextView = {
+    textView
+      .textColor(TileType.strokeColor)
+      .textSize(Grid.titleSize)
+      .typeface(Grid.typeface)
+      .padding(Grid.tileSpacing)
+  }
 }
 
 trait MenuLayout extends SLinearLayout {

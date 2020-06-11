@@ -5,6 +5,8 @@ import android.view.{View, Gravity, KeyEvent}
 import android.widget.LinearLayout
 import android.animation.{Animator, AnimatorListenerAdapter, LayoutTransition}
 import android.content._
+import android.content.Intent
+import android.net.Uri
 import View.{GONE, VISIBLE}
 
 class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
@@ -13,7 +15,13 @@ class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   gravity = Gravity.CENTER
   orientation = LinearLayout.VERTICAL
 
-  private val title        = MenuLayout.title("Swap").wrap
+  def openWebsite(): Unit = {
+    val website = Uri.parse("https://github.com/scott2000/swap-game")
+    val intent = new Intent(Intent.ACTION_VIEW, website)
+    if (intent.resolveActivity(ctx.getPackageManager) != null) ctx.startActivity(intent)
+  }
+
+  private val title        = MenuLayout.clickableTitle("Swap", openWebsite).wrap
   private val playButton   = SButton(   "Play", play).wrap
   private val colorsButton = SButton( "Colors", colors).wrap
   private val scoresButton = SButton( "Scores", leaderboard).wrap
