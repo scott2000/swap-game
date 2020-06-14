@@ -10,9 +10,6 @@ import View.{GONE, VISIBLE}
 class ColorLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Color
 
-  gravity = Gravity.CENTER
-  orientation = LinearLayout.VERTICAL
-
   private val colorView = new ColorView(this)
   this += colorView
 

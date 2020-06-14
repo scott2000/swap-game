@@ -12,9 +12,6 @@ import View.{GONE, VISIBLE}
 class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Menu
 
-  gravity = Gravity.CENTER
-  orientation = LinearLayout.VERTICAL
-
   def openWebsite(): Unit = {
     val website = Uri.parse("https://github.com/scott2000/swap-game")
     val intent = new Intent(Intent.ACTION_VIEW, website)

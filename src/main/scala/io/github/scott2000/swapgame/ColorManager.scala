@@ -40,6 +40,10 @@ object ColorManager extends BitObject {
     for (color <- UIColor.colors if color.requirement.shouldUnlock(score, chain) && !_unlocked.contains(color)) {
       _unlocked += color
       colorBuffer += color
+      if (_unlocked.length == PlayLayout.challengeColorRequirement) {
+        // represents "challenge unlocked"
+        colorBuffer += UIColor.Red
+      }
     }
     colorBuffer.toArray
   }
