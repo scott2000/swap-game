@@ -26,9 +26,6 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
 
   override def uuid: State = GameOver
 
-  gravity = Gravity.CENTER
-  orientation = LinearLayout.VERTICAL
-
   private def formatSub(text: STextView): STextView = text.textColor(TileType.strokeColor).textSize(Grid.subSize).typeface(Grid.typeface)
 
   private val messageBox = MenuLayout.title(?).wrap
@@ -53,7 +50,13 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
         } else {
           text += "\n"
         }
-        val str = new SpannableString(s"Unlocked ${color.name} (${color.requirement})")
+        val str = {
+          if (color == UIColor.Red)
+            new SpannableString("Unlocked Challenge Mode!")
+          else
+            new SpannableString(s"Unlocked ${color.name} (${color.requirement})")
+        }
+
         str.setSpan(new ForegroundColorSpan(color.color), 0, str.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         text += str
       }

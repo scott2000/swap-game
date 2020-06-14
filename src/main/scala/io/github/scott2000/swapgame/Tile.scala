@@ -13,16 +13,16 @@ object TileType extends Saver[TileType] {
     if (a <= 0.0f) {
       strokeColor
     } else if (a >= 1.0f) {
-      UIColor.Red.color
+      ColorManager.color
     } else {
-      (strokeColor & 0xff00ffff) | ((((strokeColor >>> 16) & 0xff)*(1-a) + ((UIColor.Red.color >>> 16) & 0xff)*a).toInt << 16)
+      (strokeColor & 0xff00ffff) | ((((strokeColor >>> 16) & 0xff)*(1-a) + ((ColorManager.color >>> 16) & 0xff)*a).toInt << 16)
     }
   }
 
-  case object Lightest extends TileType( .22f)
-  case object Normal   extends TileType( .52f)
-  case object Bold     extends TileType(  .8f)
-  case object Heaviest extends TileType( 1.0f)
+  case object Lightest extends TileType( .22f, false)
+  case object Normal   extends TileType( .52f, true)
+  case object Bold     extends TileType(  .8f, true)
+  case object Heaviest extends TileType( 1.0f, true)
 
   def randomTile(size: Int = values.length): TileType = values(random.nextInt(size))
 
@@ -32,7 +32,7 @@ object TileType extends Saver[TileType] {
   override def write(tile: TileType, args: Any*)(implicit writer: BitWriter): Unit = writer.write(Unsigned(values.indexOf(tile)), saveMask)
 }
 
-sealed class TileType(val partOfArea: Float) {
+sealed class TileType(val partOfArea: Float, val allowsStatic: Boolean) {
   def calculateStroke(tileSize: Float): Float = ((1-math.sqrt(1-partOfArea))*tileSize/2).toFloat
   val fillColor = 0xffffffff
   val staticFillColor = fillColor//colorAverage(fillColor, ColorManager.color, 1/27f)
@@ -77,7 +77,14 @@ sealed class TileType(val partOfArea: Float) {
 
 object Tile extends Reader[Tile] {
   def create(leveler: Leveler): Tile = {
-    new Tile(TileType.randomTile(leveler.tiles), random.nextDouble() < leveler.staticChance)
+    val ty = TileType.randomTile(leveler.tiles)
+    val static = {
+      if (ty.allowsStatic)
+        random.nextDouble() < leveler.staticChance
+      else
+        false
+    }
+    new Tile(ty, static)
   }
 
   def read(args: Any*)(implicit reader: BitReader): Tile = Tile(reader.read(TileType), reader.read())

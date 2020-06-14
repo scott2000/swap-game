@@ -5,10 +5,10 @@ import io.github.scott2000.bitManager.{BitReader, BitWriter, Writable, Reader}
 import scala.collection.mutable.ArrayBuffer
 
 object Leveler extends Reader[Leveler] {
-  val staticChanceChallenge: Float = 0.5f
-  val staticChanceMax: Float = 0.4f
-  val staticChanceInflection: Float = 1200.0f
-  val staticChanceRate: Float = 1/512f
+  val staticChanceChallenge: Float = 0.53f
+  val staticChanceMax: Float = 0.5f
+  val staticChanceInflection: Float = 1000.0f
+  val staticChanceRate: Float = 500.0f
 
   def defaultInitializer(leveler: Leveler, position: PositionWhole): Option[Tile] = Some(Tile.create(leveler))
 
@@ -41,12 +41,12 @@ object Leveler extends Reader[Leveler] {
         None,                        None,                        None,
         Some(Tile(    Bold, false)), Some(Tile(    Bold, false)), Some(Tile(    Bold, false)),
         None,                        None,                        None
-      ), Array("Connect at least 3 similar tiles to earn points;\nyou lose if you can't connect any.")),
+      ), Array("Connect at least three\nsimilar tiles to earn points.\nYou lose if you can't do anything.")),
       (Array(
         None,                        None,                        None,
         Some(Tile(Lightest, false)), Some(Tile(  Normal, false)), Some(Tile(  Normal, false)),
         Some(Tile(  Normal, false)), None,                        None
-      ), Array("Swap different tiles to make longer chains.", "Swaps are somewhat limited\nbut recharge after connecting tiles.")),
+      ), Array("Swap different tiles\nto make longer chains.", "Swaps are somewhat limited but\nrecharge after connecting tiles.")),
       (Array(
         None,                        Some(Tile(Bold, false)),     Some(Tile(Normal, false)),
         Some(Tile  (Normal, false)), Some(Tile(Normal,  true)),   Some(Tile(Bold, true)),
@@ -205,7 +205,15 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
   private def toGridIndex(position: PositionWhole): Int = position.x+position.y*width
   private def fromGridIndex(index: Int): PositionWhole = PositionWhole(index%width, index/width)
 
-  def staticChance: Float = if (isChallenge) staticChanceChallenge else (staticChanceMax/(1+math.exp(-staticChanceRate*(score-staticChanceInflection)))).toFloat
+  def staticChance: Float = {
+    val wave = -0.1 * math.sin(math.Pi * score / staticChanceRate)
+    if (isChallenge)
+      (staticChanceChallenge + wave).toFloat
+    else {
+      val denom = 1 + math.exp(-(score - staticChanceInflection) / staticChanceRate)
+      ((staticChanceMax + wave) / denom).toFloat
+    }
+  }
 
   lazy val indices: Array[PositionWhole] = {
     val array = new ArrayBuffer[PositionWhole]

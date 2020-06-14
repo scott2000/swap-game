@@ -8,14 +8,12 @@ import android.content._
 import View.{GONE, VISIBLE}
 
 object PlayLayout {
-  def isNeeded: Boolean = ColorManager.unlocked.length == UIColor.colors.length
+  val challengeColorRequirement = 5
+  def isNeeded: Boolean = ColorManager.unlocked.length >= challengeColorRequirement
 }
 
 class PlayLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Play
-
-  gravity = Gravity.CENTER
-  orientation = LinearLayout.VERTICAL
 
   private val title           = MenuLayout.title("Play").wrap
   private val normalButton    = SButton(   "Normal", start(false)).wrap

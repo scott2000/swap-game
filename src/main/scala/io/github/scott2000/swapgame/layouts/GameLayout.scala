@@ -10,9 +10,6 @@ import View.{GONE, VISIBLE}
 class GameLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Game
 
-  gravity = Gravity.CENTER
-  orientation = LinearLayout.VERTICAL
-
   private var hasShown = false
   private var ready = true
 

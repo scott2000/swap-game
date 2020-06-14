@@ -2,6 +2,9 @@ package io.github.scott2000.swapgame
 
 import org.scaloid.common._
 import android.content.Context
+import android.graphics.Paint
+import android.view.Gravity
+import android.widget.LinearLayout
 
 object MenuLayout {
   def title[LP <: ViewGroupLayoutParams[_, STextView]](text: String)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
@@ -23,6 +26,9 @@ object MenuLayout {
 
 trait MenuLayout extends SLinearLayout {
   def uuid: Option[Int] = None
+
+  gravity = Gravity.CENTER
+  orientation = LinearLayout.VERTICAL
 
   private var _set = false
 

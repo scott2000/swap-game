@@ -7,7 +7,7 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 scalaVersion := "2.11.7"
 scalacOptions in Compile += "-feature"
 
-platformTarget in Android := "android-26"
+platformTarget in Android := "android-29"
 
 updateCheck in Android := {}
 proguardCache in Android ++= Seq("org.scaloid")

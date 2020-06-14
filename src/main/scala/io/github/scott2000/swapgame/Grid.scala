@@ -76,9 +76,12 @@ object Grid extends Reader[Grid] {
   val subSize = 48
   val subSpacing = 48
 
+  val swapSize: Int = 52
+  val swapSpacing: Int = swapSize*36/96
+
   private val _textLeft: TextPaint = new TextPaint()
   _textLeft.setAntiAlias(true)
-  _textLeft.setTextSize(42)
+  _textLeft.setTextSize(swapSize)
   _textLeft.setStrokeWidth(3.0f)
   _textLeft.setTypeface(typeface)
 
@@ -109,9 +112,6 @@ object Grid extends Reader[Grid] {
   def boldLeft   = colorText(new TextPaint(_boldLeft))
   def boldCenter = colorText(new TextPaint(_boldCenter))
   def boldRight  = colorText(new TextPaint(_boldRight))
-
-  val swapSize: Int = 48
-  val swapSpacing: Int = swapSize*36/96
 
   def saveFile(challenge: Boolean) = if (challenge) "saveChallenge" else "saveNormal"
 
@@ -233,7 +233,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       for (position <- leveler.indices; tile <- leveler.grid(position)) {
         tile.update(time)
       }
-      displayScore = towards(displayScore, leveler.score, 2, time)
+      displayScore = towards(displayScore, leveler.score, 3.5f, time)
       displaySwaps = towards(displaySwaps, swapPoints, leveler.pointsPerSwap, time)
     }
   }
@@ -297,7 +297,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
 
   def displayScores()(implicit canvas: Canvas): Unit = {
     val score = math.round(math.ceil(displayScore))
-    canvas.drawText(s"$score", canvas.getWidth/2, indent+swapSize/2-textRight.getFontMetrics.ascent/2, textCenter)
+    canvas.drawText(s"$score", canvas.getWidth/2, indent+swapSize/2-textCenter.getFontMetrics.ascent/2, textCenter)
     val recordPaint = textRight
     val record = Settings.scoreFor(leveler.isChallenge)
     if (!leveler.tutorial) {
@@ -305,7 +305,8 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
         recordPaint.setColor(TileType.strokeBetween(displayScore-record))
       }
     }
-    canvas.drawText(if (leveler.tutorial) "Tutorial" else f"Record: ${max(score, record)}", canvas.getWidth-indent, indent+swapSize/2-textRight.getFontMetrics.ascent/2, recordPaint)
+    recordPaint.setTextSize(36)
+    canvas.drawText(if (leveler.tutorial) "Tutorial" else f"Record: ${max(score, record)}", canvas.getWidth-indent, indent+swapSize/2-recordPaint.getFontMetrics.ascent/2, recordPaint)
     for (text <- leveler.displayText) {
       val textSplit = text.split('\n')
       for (index <- textSplit.indices) {
@@ -313,7 +314,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       }
     }
     var index = 0
-    for ((color, start) <- colorBuffer) {
+    for ((color, start) <- colorBuffer.reverseIterator) {
       val time = System.currentTimeMillis-start
 
       val alpha = if (time < animateTime) {
@@ -329,7 +330,13 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
         val paint = boldCenter
         paint.setTextSize(48)
         paint.setColor((color.color & 0xffffff) | (alpha << 24))
-        canvas.drawText(s"${color.name} Unlocked", canvas.getWidth/2, startY-indent+paint.getFontMetrics.ascent/2-index*swapSize, paint)
+        val message = {
+          if (color == UIColor.Red)
+            "Challenge Mode"
+          else
+            s"${color.name}"
+        }
+        canvas.drawText(s"$message Unlocked", canvas.getWidth/2, startY-indent+paint.getFontMetrics.ascent/2-index*swapSize, paint)
         index += 1
       }
     }
@@ -432,11 +439,20 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
           lastMove = System.currentTimeMillis()
           lastSwap = None
           bestChain = math.max(tileBuffer.length, bestChain)
-          var increment = -2
+          var multiplier = 1
+          var increment = 0
           while(tileBuffer.nonEmpty) {
-            increment += clear(tileBuffer.remove(0))
+            val amount = clear(tileBuffer.remove(0))
+            if (amount == 2) {
+              if (multiplier < 10) {
+                multiplier += 1
+              }
+              increment += 1
+            } else {
+              increment += amount
+            }
           }
-          leveler.incrementScore(increment)
+          leveler.incrementScore(increment * multiplier)
           leveler.tutorialAct()
           update()
           save()
