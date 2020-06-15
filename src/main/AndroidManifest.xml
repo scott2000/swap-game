@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="io.github.scott2000.swapgame"
           android:versionCode="16"
-          android:versionName="1.1">
+          android:versionName="1.2">
 
   <uses-sdk android:targetSdkVersion="29" android:minSdkVersion="21"/>
 
