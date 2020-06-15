@@ -6,16 +6,19 @@ import io.github.scott2000.bitManager._
 
 object TileType extends Saver[TileType] {
   val values: Array[TileType] = Array(Heaviest, Lightest, Bold, Normal)
-  val strokeColor: Int = 0xff202020
+  val darkModeStroke = 0xffe8e8e8
+  def strokeColor: Int = if (Settings.darkMode) darkModeStroke else 0xff202020
+  def brightBackground = if (Settings.darkMode) darkModeStroke else 0xffffffff
+  def backgroundColor: Int = if (Settings.darkMode) 0xff000000 else 0xffffffff
 
-  def strokeBetween(amount: Float = 0.5f, redLow: Boolean = false): Int = {
-    val a = if (redLow) 1-amount else amount
+  def strokeBetween(amount: Float = 0.5f, colorLow: Boolean = false): Int = {
+    val a = if (colorLow) 1-amount else amount
     if (a <= 0.0f) {
       strokeColor
     } else if (a >= 1.0f) {
       ColorManager.color
     } else {
-      (strokeColor & 0xff00ffff) | ((((strokeColor >>> 16) & 0xff)*(1-a) + ((ColorManager.color >>> 16) & 0xff)*a).toInt << 16)
+      colorAverage(strokeColor, ColorManager.color, a)
     }
   }
 
@@ -34,12 +37,9 @@ object TileType extends Saver[TileType] {
 
 sealed class TileType(val partOfArea: Float, val allowsStatic: Boolean) {
   def calculateStroke(tileSize: Float): Float = ((1-math.sqrt(1-partOfArea))*tileSize/2).toFloat
-  val fillColor = 0xffffffff
-  val staticFillColor = fillColor//colorAverage(fillColor, ColorManager.color, 1/27f)
 
   private lazy val _fill: Paint = {
     val fill = new Paint()
-    fill.setColor(0xffffffff)
     fill.setStyle(Paint.Style.FILL)
     fill.setAntiAlias(true)
     fill
@@ -47,28 +47,26 @@ sealed class TileType(val partOfArea: Float, val allowsStatic: Boolean) {
 
   private lazy val _stroke: Paint = {
     val stroke = new Paint()
-    stroke.setColor(TileType.strokeColor)
     stroke.setStyle(Paint.Style.STROKE)
     stroke.setAntiAlias(true)
     stroke
   }
 
-  def fill: Paint = new Paint(_fill)
-  def stroke: Paint = new Paint(_stroke)
-
-  def staticFill: Paint = {
-    val fill = new Paint()
-    fill.setColor(staticFillColor)
-    fill.setStyle(Paint.Style.FILL)
-    fill.setAntiAlias(true)
+  def fill: Paint = {
+    val fill = new Paint(_fill)
+    fill.setColor(TileType.backgroundColor)
     fill
   }
 
+  def stroke: Paint = {
+    val stroke = new Paint(_stroke)
+    stroke.setColor(TileType.strokeColor)
+    stroke
+  }
+
   def staticStroke: Paint = {
-    val stroke = new Paint()
+    val stroke = new Paint(_stroke)
     stroke.setColor(ColorManager.color)
-    stroke.setStyle(Paint.Style.STROKE)
-    stroke.setAntiAlias(true)
     stroke
   }
 
@@ -91,8 +89,6 @@ object Tile extends Reader[Tile] {
 }
 
 case class Tile(tileType: TileType, static: Boolean, animate: Boolean = true) extends Writable {
-  import Tile._
-
   def startAnimation(): Unit = mod = 0.0f
 
   var mod: Float = if (animate) 0.0f else 1.0f
@@ -107,7 +103,7 @@ case class Tile(tileType: TileType, static: Boolean, animate: Boolean = true) ex
     val radius = size/2 - strokeWidth/2
     val stroke = if (static) tileType.staticStroke else tileType.stroke
     stroke.setStrokeWidth(strokeWidth)
-    canvas.drawCircle(position.x, position.y, radius, if (static) tileType.staticFill   else tileType.fill)
+    canvas.drawCircle(position.x, position.y, radius, tileType.fill)
     canvas.drawCircle(position.x, position.y, radius, stroke)
   }
 

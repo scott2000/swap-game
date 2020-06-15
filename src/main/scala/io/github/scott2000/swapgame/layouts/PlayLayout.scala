@@ -7,7 +7,7 @@ import View.{GONE, VISIBLE}
 
 object PlayLayout {
   val challengeColorRequirement = 5
-  def isNeeded: Boolean = ColorManager.unlocked.length >= challengeColorRequirement
+  def isNeeded: Boolean = !Settings.tutorial && ColorManager.unlocked.length >= challengeColorRequirement
 }
 
 class PlayLayout()(implicit ctx: Context) extends MenuLayout {
@@ -25,7 +25,10 @@ class PlayLayout()(implicit ctx: Context) extends MenuLayout {
     MenuActivity.switchTo(Game)
   }
 
-  override def refresh(): Unit = backButton.setBackgroundTintList(colorStateList)
+  override def refresh(): Unit = {
+    MenuLayout.updateTitle(title)
+    backButton.setBackgroundTintList(colorStateList)
+  }
 
   override def setHidden(): Unit = {
     alpha = 0.0f
@@ -42,11 +45,6 @@ class PlayLayout()(implicit ctx: Context) extends MenuLayout {
       visibility = GONE
       action
     })
-  }
-
-  override def longBack(): Boolean = {
-    Grid.barSwap = !Grid.barSwap
-    true
   }
 
   override def back(): Boolean = {

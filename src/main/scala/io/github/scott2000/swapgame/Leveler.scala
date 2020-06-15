@@ -21,8 +21,6 @@ object Leveler extends Reader[Leveler] {
   }
 
   object TutorialController {
-    import TileType._
-
     def template(array: Array[Option[Tile]]): (Leveler, PositionWhole) => Option[Tile] =
       (leveler: Leveler, position: PositionWhole) => {
         val tileOption = array(position.x+position.y*3)
@@ -35,8 +33,13 @@ object Leveler extends Reader[Leveler] {
       None, None, None,
       None, None, None
     )
+  }
 
-    lazy val stageList: Array[(Array[Option[Tile]], Array[String])] = Array(
+  class TutorialController(leveler: Leveler) {
+    import TutorialController._
+    import TileType._
+
+    val stageList: Array[(Array[Option[Tile]], Array[String])] = Array(
       (Array(
         None,                        None,                        None,
         Some(Tile(    Bold, false)), Some(Tile(    Bold, false)), Some(Tile(    Bold, false)),
@@ -53,10 +56,6 @@ object Leveler extends Reader[Leveler] {
         None,                        None,                        None
       ), Array(s"${ColorManager.uiColor.name} tiles can't be swapped\nbut give extra points.", "The goal is to get the best score\nand to unlock new colors."))
     )
-  }
-
-  class TutorialController(leveler: Leveler) {
-    import TutorialController._
 
     private var stage = -1
     private var part: Int = _
