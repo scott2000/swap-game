@@ -9,8 +9,8 @@ The game gets harder as you score more points and more red tiles that cannot
 be swapped appear, limiting your moves.
 
 Unlock new colors by reaching high scores and connecting extra long chains of
-tiles. If you can manage to unlock every color, a special challenge mode will
-be unlocked with a much higher difficulty.
+tiles. If you unlock enough colors, a special challenge mode will be unlocked
+with a much higher difficulty.
 
 - [Google Play](https://play.google.com/store/apps/details?id=io.github.scott2000.swapgame)
 - [Privacy Policy](PRIVACY_POLICY.md)
