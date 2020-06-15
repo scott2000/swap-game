@@ -1,11 +1,9 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{View, Gravity, KeyEvent}
-import android.text.{Spannable, Spanned, SpannableString}
+import android.view.{View, Gravity}
+import android.text.{Spanned, SpannableString}
 import android.text.style.ForegroundColorSpan
-import android.widget.LinearLayout
-import android.animation.{Animator, AnimatorListenerAdapter, LayoutTransition}
 import android.content._
 import View.{GONE, VISIBLE}
 

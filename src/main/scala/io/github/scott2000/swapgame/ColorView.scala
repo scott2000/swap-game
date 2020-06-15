@@ -1,7 +1,6 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{MotionEvent, View}
 import android.graphics.{Canvas, Paint}
 import android.content.Context
 

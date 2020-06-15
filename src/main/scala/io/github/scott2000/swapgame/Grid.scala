@@ -12,7 +12,6 @@ import io.github.scott2000.bitManager.{BitReader, BitWriter, Reader, Writable}
 import com.google.android.gms.games._
 import com.google.android.gms.games.leaderboard.Leaderboards
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{min, max, pow, sqrt, round}
 
@@ -334,7 +333,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
           else
             s"${color.name}"
         }
-        canvas.drawText(s"$message Unlocked", canvas.getWidth/2, startY-indent+paint.getFontMetrics.ascent/2-index*swapSize, paint)
+        canvas.drawText(s"$message Unlocked", canvas.getWidth/2, startY-indent/2+paint.getFontMetrics.ascent/2+index*paint.getFontMetrics.top, paint)
         index += 1
       }
     }

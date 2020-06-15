@@ -1,16 +1,10 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{View, Gravity, KeyEvent}
-import android.text.{Spannable, Spanned, SpannableString}
-import android.text.style.ForegroundColorSpan
-import android.widget.LinearLayout
-import android.animation.{Animator, AnimatorListenerAdapter}
+import android.view.{View, KeyEvent}
 import android.os.Bundle
 import android.app.Activity
 import android.content._
-
-import scala.collection.mutable.ArrayBuffer
 
 import com.google.android.gms._
 import com.google.android.gms.common.ConnectionResult

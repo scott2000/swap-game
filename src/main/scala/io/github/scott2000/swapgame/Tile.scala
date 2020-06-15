@@ -1,6 +1,6 @@
 package io.github.scott2000.swapgame
 
-import android.graphics.{Canvas, Paint, RectF}
+import android.graphics.{Canvas, Paint}
 
 import io.github.scott2000.bitManager._
 

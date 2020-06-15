@@ -1,9 +1,7 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{View, Gravity, KeyEvent}
-import android.widget.LinearLayout
-import android.animation.{Animator, AnimatorListenerAdapter}
+import android.view.View
 import android.content._
 import View.{GONE, VISIBLE}
 

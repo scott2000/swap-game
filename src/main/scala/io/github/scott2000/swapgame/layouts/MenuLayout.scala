@@ -2,7 +2,6 @@ package io.github.scott2000.swapgame
 
 import org.scaloid.common._
 import android.content.Context
-import android.graphics.Paint
 import android.view.Gravity
 import android.widget.LinearLayout
 

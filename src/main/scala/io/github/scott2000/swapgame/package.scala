@@ -2,11 +2,8 @@ package io.github.scott2000
 
 import scala.util.Random
 
-import android.view.{View, Gravity, KeyEvent}
-import android.widget.LinearLayout
+import android.view.View
 import android.animation.{Animator, AnimatorListenerAdapter}
-import android.content._
-import View.{GONE, VISIBLE}
 
 import android.content.res.ColorStateList
 import android.R.attr._
