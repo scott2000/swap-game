@@ -5,7 +5,7 @@ import java.io.File
 import org.scaloid.common._
 
 import android.content.Context
-import android.graphics.{Canvas, Paint, RectF, Typeface}
+import android.graphics.{Canvas, Paint, Rect, RectF, Typeface}
 import android.text.TextPaint
 import io.github.scott2000.bitManager.{BitReader, BitWriter, Reader, Writable}
 
@@ -188,8 +188,8 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
 
   private var startX = 0.0f
   private var startY = 0.0f
-  private var lastWidth = 0.0f
-  private var lastHeight = 0.0f
+
+  private var scoreParticle: Option[(PositionFraction, Int, Long)] = None
 
   private var endFlag = false
   private var displaySwaps: Float = swapPoints.toFloat
@@ -300,10 +300,8 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
     canvas.drawText(s"$score", canvas.getWidth/2, indent+swapSize/2-textCenter.getFontMetrics.ascent/2, textCenter)
     val recordPaint = textRight
     val record = Settings.scoreFor(leveler.isChallenge)
-    if (!leveler.tutorial) {
-      if (score > record) {
-        recordPaint.setColor(TileType.strokeBetween(displayScore-record))
-      }
+    if (!leveler.tutorial && score > record) {
+      recordPaint.setColor(TileType.strokeBetween(displayScore-record))
     }
     recordPaint.setTextSize(36)
     canvas.drawText(if (leveler.tutorial) "Tutorial" else f"Record: ${max(score, record)}", canvas.getWidth-indent, indent+swapSize/2-recordPaint.getFontMetrics.ascent/2, recordPaint)
@@ -367,6 +365,46 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
     }
   }
 
+  def displayScoreParticle()(implicit canvas: Canvas): Unit = {
+    for ((position, score, startTime) <- scoreParticle) {
+      if (leveler.tutorial) {
+        return
+      }
+
+      val time = System.currentTimeMillis() - startTime
+      val moveTime = 250.0f
+      val fadeStart = moveTime * 2
+      if (time > fadeStart + moveTime) {
+        return
+      }
+
+      val heightOffset = ((tileSize + tileSpacing) / 2.0f) * towards(0.0f, 1.0f, time / moveTime)
+      val opacity = {
+        if (time < fadeStart) {
+          1.0f
+        } else {
+          towards(1.0f, 0.0f, (time - fadeStart) / moveTime)
+        }
+      }
+
+      val paint = boldCenter
+      paint.setTextSize(math.min(50 + score, 100))
+
+      val text = s"+${score}"
+      val x = position.x
+      val y = position.y + paint.getFontMetrics.ascent/2 - heightOffset
+
+      val borderPaint = new Paint(paint)
+      borderPaint.setStyle(Paint.Style.STROKE)
+      borderPaint.setStrokeWidth(10)
+      borderPaint.setColor(0xffffff | (((1 - math.sqrt(1 - opacity)) * 255).toInt << 24))
+      canvas.drawText(text, x, y, borderPaint)
+
+      paint.setColor((ColorManager.color & 0xffffff) | ((opacity * 255).toInt << 24))
+      canvas.drawText(text, x, y, paint)
+    }
+  }
+
   def displayOn(canvas: Canvas, touchLocation: Option[PositionFraction]): Unit = {
     updateTileSize(canvas.getWidth, canvas.getHeight)
 
@@ -381,6 +419,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       displayScores()
       displayMoveHint()
       displayTilesAndLines()
+      displayScoreParticle()
     }
   }
 
@@ -439,6 +478,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
           lastMove = System.currentTimeMillis()
           lastSwap = None
           bestChain = math.max(tileBuffer.length, bestChain)
+          val lastTile = tileBuffer.last
           var multiplier = 1
           var increment = 0
           while(tileBuffer.nonEmpty) {
@@ -452,7 +492,11 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
               increment += amount
             }
           }
-          leveler.incrementScore(increment * multiplier)
+          val score = increment * multiplier
+          if (multiplier > 1) {
+            scoreParticle = Some((toCenter(lastTile), score, System.currentTimeMillis()))
+          }
+          leveler.incrementScore(score)
           leveler.tutorialAct()
           update()
           save()

@@ -1,28 +1,36 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{View, Gravity, KeyEvent}
-import android.widget.LinearLayout
-import android.animation.{Animator, AnimatorListenerAdapter, LayoutTransition}
+import android.view.View
+import android.animation.LayoutTransition
 import android.content._
 import android.content.Intent
 import android.net.Uri
 import View.{GONE, VISIBLE}
+import android.widget.Toast
 
 class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Menu
 
+  var titlePressed = false
+
   def openWebsite(): Unit = {
-    val website = Uri.parse("https://github.com/scott2000/swap-game")
-    val intent = new Intent(Intent.ACTION_VIEW, website)
-    if (intent.resolveActivity(ctx.getPackageManager) != null) ctx.startActivity(intent)
+    if (titlePressed) {
+      val website = Uri.parse("https://github.com/scott2000/swap-game")
+      val intent = new Intent(Intent.ACTION_VIEW, website)
+      if (intent.resolveActivity(ctx.getPackageManager) != null) ctx.startActivity(intent)
+      titlePressed = false
+    } else {
+      Toast.makeText(ctx.getApplicationContext, "Press title again to open website", Toast.LENGTH_SHORT).show()
+      titlePressed = true
+    }
   }
 
-  private val title        = MenuLayout.clickableTitle("Swap", openWebsite).wrap
-  private val playButton   = SButton(   "Play", play).wrap
-  private val colorsButton = SButton( "Colors", colors).wrap
-  private val scoresButton = SButton( "Scores", leaderboard).wrap
-  private val signInButton = SButton("Sign In", leaderboard).wrap
+  private val title         = MenuLayout.clickableTitle("Swap", openWebsite).wrap
+  private val playButton    = SButton(   "Play", play).wrap
+  private val colorsButton  = SButton( "Colors", colors).wrap
+  private val scoresButton  = SButton( "Scores", leaderboard).wrap
+  private val signInButton  = SButton("Sign In", leaderboard).wrap
 
   refresh()
 
