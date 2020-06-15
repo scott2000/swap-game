@@ -10,8 +10,7 @@ import android.R.attr._
 
 package object swapgame {
   val random = new Random()
-  def animateTime = if (_debug) 3000.0f else 250.0f
-  var _debug = false
+  val animateTime = 250.0f
 
   def ? = "Error"
 
@@ -21,17 +20,10 @@ package object swapgame {
   val Game:     State = Some(1)
   val Color:    State = Some(2)
   val GameOver: State = Some(3)
+  val Options:  State = Some(4)
 
-  def onEnd(action: => Unit) = new AnimatorListenerAdapter() {override def onAnimationEnd(animation: Animator): Unit = action}
-
-  lazy val disableStateList: ColorStateList = {
-    new ColorStateList(Array(
-      Array(-state_enabled),
-      new Array[Int](0)
-    ), Array(
-      setAlpha(TileType.strokeColor, 0.25f),
-      TileType.strokeColor
-    ))
+  def onEnd(action: => Unit) = new AnimatorListenerAdapter() {
+    override def onAnimationEnd(animation: Animator): Unit = action
   }
 
   def colorStateList: ColorStateList = {

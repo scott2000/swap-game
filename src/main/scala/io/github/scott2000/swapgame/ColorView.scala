@@ -24,7 +24,7 @@ class ColorView(layout: ColorLayout)(implicit ctx: Context) extends SView with R
   private var r = 0
   private var b = 0
   private var g = 0
-  private var nextColor: Int = 0xffd82020
+  private var nextColor: Int = 0xff000000
 
   def setSegments(): Unit = {
     this.synchronized {
@@ -99,8 +99,11 @@ class ColorView(layout: ColorLayout)(implicit ctx: Context) extends SView with R
           canvas.drawArc(canvas.getWidth/2-radius, canvas.getHeight/2-radius, canvas.getWidth/2+radius, canvas.getHeight/2+radius, position, size, true, outline)
           position += size
         }
-        paint.setColor(0xffffffff)
 
+        paint.setColor(TileType.brightBackground)
+        canvas.drawArc(canvas.getWidth/2-radius, canvas.getHeight/2-radius, canvas.getWidth/2+radius, canvas.getHeight/2+radius, -offset/2-90f, offset, true, paint)
+
+        paint.setColor(TileType.backgroundColor)
         canvas.drawArc(canvas.getWidth/2-radius, canvas.getHeight/2-radius, canvas.getWidth/2+radius, canvas.getHeight/2+radius, position, offset, true, outline)
         canvas.drawArc(canvas.getWidth/2-radius2, canvas.getHeight/2-radius2, canvas.getWidth/2+radius2, canvas.getHeight/2+radius2, selector+size, 360f-size, true, paint)
         canvas.drawArc(canvas.getWidth/2-radius2, canvas.getHeight/2-radius2, canvas.getWidth/2+radius2, canvas.getHeight/2+radius2, selector+size, 360f-size, true, outline)
@@ -110,8 +113,11 @@ class ColorView(layout: ColorLayout)(implicit ctx: Context) extends SView with R
         paint.setColor((0xff << 24) | (r << 16) | (g << 8) | b)
         paint.setAntiAlias(true)
         canvas.drawCircle(canvas.getWidth/2, canvas.getHeight/2, Grid.tileSize/2, paint)
+
         backButton.setBounds(canvas.getWidth/2-36, canvas.getHeight/2-radius+Grid.indent-36, canvas.getWidth/2+36, canvas.getHeight/2-radius+Grid.indent+36)
         backButton.draw(canvas)
+
+        // TODO white background behind back button always
       }
     }
   }

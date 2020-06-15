@@ -41,7 +41,7 @@ class GameView(implicit ctx: Context) extends SSurfaceView with SurfaceHolder.Ca
   override def onDraw(canvas: Canvas): Unit = drawWith(canvas)
 
   def drawWith(canvas: Canvas): Unit = {
-    canvas.drawColor(0xffffffff)
+    canvas.drawColor(TileType.backgroundColor)
     for (grid <- Grid.grid) {
       grid.displayOn(canvas, lastTouch)
     }

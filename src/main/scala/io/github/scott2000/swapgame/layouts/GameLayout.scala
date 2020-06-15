@@ -22,7 +22,10 @@ class GameLayout()(implicit ctx: Context) extends MenuLayout {
     visibility = GONE
   }
 
-  override def refresh(): Unit = gameView.start()
+  override def refresh(): Unit = {
+    super.refresh()
+    gameView.start()
+  }
   override def clean(): Unit = gameView.stop()
 
   override def showFrom(previous: MenuLayout): Unit = {
@@ -47,11 +50,6 @@ class GameLayout()(implicit ctx: Context) extends MenuLayout {
   }
 
   override def isReady: Boolean = ready
-
-  override def longBack(): Boolean = {
-    _debug = !_debug
-    true
-  }
 
   override def back(): Boolean = {
     MenuActivity.switchTo(if (PlayLayout.isNeeded) Play else Menu)

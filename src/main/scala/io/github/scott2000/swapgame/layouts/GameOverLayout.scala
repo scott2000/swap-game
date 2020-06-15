@@ -89,6 +89,10 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
 
   override def refresh(): Unit = {
     this.synchronized {
+      MenuLayout.updateTitle(messageBox)
+      MenuLayout.updateTitle(scoreBox)
+      MenuLayout.updateTitle(chainBox)
+      MenuLayout.updateTitle(highScoreBox)
       mainMenu.setBackgroundTintList(colorStateList)
       messageBox.text = messageText
       scoreBox.text = scoreText

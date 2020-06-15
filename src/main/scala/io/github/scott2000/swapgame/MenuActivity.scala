@@ -1,7 +1,7 @@
 package io.github.scott2000.swapgame
 
 import org.scaloid.common._
-import android.view.{View, KeyEvent}
+import android.view.View
 import android.os.Bundle
 import android.app.Activity
 import android.content._
@@ -137,7 +137,8 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     Play     -> new PlayLayout(),
     Game     -> new GameLayout(),
     Color    -> new ColorLayout(),
-    GameOver -> new GameOverLayout()
+    GameOver -> new GameOverLayout(),
+    Options  -> new SettingsLayout()
   )
 
   lazy val mergedLayout = new SFrameLayout {
@@ -152,6 +153,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     setTheme(R.style.AppTheme)
     super.onCreate(savedInstanceState)
     Settings.load()
+    mergedLayout.backgroundColor = TileType.backgroundColor
     instance = this
     contentView = mergedLayout
     enterFullscreen()
@@ -195,27 +197,11 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     getWindow.getDecorView.setSystemUiVisibility(outFullscreen)
   }
 
-  private def toggleFullscreen(): Unit = {
-    if (isFullscreen) {
-      exitFullscreen()
-    } else {
-      enterFullscreen()
-    }
-  }
-
   private def continueFullscreen(): Unit = {
     if (isFullscreen) {
       enterFullscreen()
     } else {
       exitFullscreen()
-    }
-  }
-
-  override def onKeyLongPress(keyCode: Int, event: KeyEvent): Boolean = {
-    if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK) {
-      layout.longBack()
-    } else {
-      false
     }
   }
 

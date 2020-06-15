@@ -11,13 +11,14 @@ import android.content.Context
 
 object Settings extends BitObject {
   private var isLoaded = false
-  val version: Byte = 1
+  val version: Byte = 2
   val leaderboards = Array(Some("CgkItbTPhNUKEAIQBw"), Some("CgkItbTPhNUKEAIQCA"))
   val settingsFile = "settings"
   private val _highScores = Array(0, 0)
   private var _tutorial = true
   var upToDate = true
   var shouldConnect = true
+  var darkMode = false
 
   def addScore(newScore: Int, isChallenge: Boolean): Unit = {
     val index = if (isChallenge) 1 else 0
@@ -69,6 +70,7 @@ object Settings extends BitObject {
 
   def tutorial: Boolean = _tutorial
   def disableTutorial(): Unit = _tutorial = false
+  def enableTutorial(): Unit = _tutorial = true
 
   def hasSave(implicit ctx: Context): Boolean = new File(ctx.getFilesDir, settingsFile).exists()
 
@@ -95,6 +97,9 @@ object Settings extends BitObject {
     upToDate = reader.read()
     if (version >= 1) {
       shouldConnect = reader.read()
+      if (version >= 2) {
+        darkMode = reader.read()
+      }
     }
     reader.read(ColorManager, version)
   }
@@ -106,6 +111,7 @@ object Settings extends BitObject {
     writer.write(_tutorial)
     writer.write(upToDate)
     writer.write(shouldConnect)
+    writer.write(darkMode)
     writer.write(ColorManager)
   }
 }

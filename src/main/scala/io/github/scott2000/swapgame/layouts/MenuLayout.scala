@@ -7,19 +7,16 @@ import android.widget.LinearLayout
 
 object MenuLayout {
   def title[LP <: ViewGroupLayoutParams[_, STextView]](text: String)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
-    formatTitle(STextView(text))
-  }
-
-  def clickableTitle[LP <: ViewGroupLayoutParams[_, STextView]](text: String, callback: ViewOnClickListener)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
-    formatTitle(STextView(text, callback))
-  }
-
-  def formatTitle(textView: STextView): STextView = {
-    textView
-      .textColor(TileType.strokeColor)
+    updateTitle(STextView(text)
       .textSize(Grid.titleSize)
       .typeface(Grid.typeface)
-      .padding(Grid.tileSpacing)
+      .padding(Grid.tileSpacing))
+  }
+
+  def updateTitle(textView: STextView): STextView = {
+    textView
+      .backgroundColor(TileType.backgroundColor)
+      .textColor(TileType.strokeColor)
   }
 }
 
@@ -28,6 +25,8 @@ trait MenuLayout extends SLinearLayout {
 
   gravity = Gravity.CENTER
   orientation = LinearLayout.VERTICAL
+
+  backgroundColor = 0x00ffffff
 
   private var _set = false
 
@@ -56,7 +55,6 @@ trait MenuLayout extends SLinearLayout {
   protected def isReady: Boolean = true
 
   def back(): Boolean = false
-  def longBack(): Boolean = false
 
   final def to(layout: MenuLayout): Boolean = {
     require(_set,        "The current layout was never set to an initial state.")

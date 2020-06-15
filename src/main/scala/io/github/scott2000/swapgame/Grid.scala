@@ -33,9 +33,6 @@ object Grid extends Reader[Grid] {
       new File(ctx.getFilesDir, saveFile(leveler.isChallenge)).delete()
     }
   }
-
-  var barSwap: Boolean = false
-
   var loaded: Option[Boolean] = None
   var tileSize = 96
   val spacingRatio = 36f/96f
@@ -149,7 +146,7 @@ object Grid extends Reader[Grid] {
 
   def load(challenge: Boolean)(implicit ctx: Context): Unit = {
     if (grid == None || loaded == None || loaded.get != challenge) {
-      if (hasSave(challenge)) {
+      if (hasSave(challenge) && !Settings.tutorial) {
         val bitReader = new BitReader(ctx.openFileInput(saveFile(challenge)))
         grid = Some(bitReader.read(Grid, ctx))
         bitReader.close()
@@ -238,46 +235,22 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   }
 
   def displaySwaps()(implicit canvas: Canvas): Unit = {
-    if (barSwap) {
-      paint.setColor(colorAverage(TileType.strokeColor, 0xffffff))
-      paint.setStrokeWidth(3.0f)
+    paint.setColor(if (leveler.swaps < 2) TileType.strokeColor else TileType.strokeBetween(displaySwaps-(leveler.pointsPerSwap*2-1), colorLow=true))
+    paint.setStrokeWidth(3.0f)
+    var n = 0
+    var swaps = displaySwaps
+    while (n < leveler.swaps) {
+      val rect = new RectF(indent+((swapSize+swapSpacing)*n), indent, (indent+swapSize)+((swapSize+swapSpacing)*n), indent+swapSize)
       paint.setStyle(Paint.Style.STROKE)
-      canvas.drawRect(startX, startY-indent-swapSize, startX+pixelWidth, startY-indent, paint)
-      for (n <- 1 until leveler.swaps) {
-        val x = startX+n*(pixelWidth/leveler.swaps)
-        canvas.drawLine(x, startY-indent-swapSize, x, startY-indent, paint)
-      }
-      if (displaySwaps > 0) {
-        paint.setStyle(Paint.Style.FILL_AND_STROKE)
-        val color = if (leveler.swaps < 2) TileType.strokeColor else TileType.strokeBetween(displaySwaps-(leveler.pointsPerSwap*2-1), redLow=true)
-        var n = 0
-        while (n < leveler.swaps) {
-          val size = min(leveler.pointsPerSwap, displaySwaps-leveler.pointsPerSwap*n)
-          if (size > 0) {
-            paint.setColor(if (size >= leveler.pointsPerSwap) color else colorAverage(color, 0xffffff, math.min(0.2f, (leveler.pointsPerSwap-size)*0.2f)))
-            canvas.drawRect(startX+n*pixelWidth/leveler.swaps, startY-indent-swapSize, startX+(n+size/leveler.pointsPerSwap)*pixelWidth/leveler.swaps, startY-indent, paint)
-          }
-          n += 1
-        }
-      }
-    } else {
-      paint.setColor(if (leveler.swaps < 2) TileType.strokeColor else TileType.strokeBetween(displaySwaps-(leveler.pointsPerSwap*2-1), redLow=true))
-      paint.setStrokeWidth(3.0f)
-      var n = 0
-      var swaps = displaySwaps
-      while (n < leveler.swaps) {
-        val rect = new RectF(indent+((swapSize+swapSpacing)*n), indent, (indent+swapSize)+((swapSize+swapSpacing)*n), indent+swapSize)
-        paint.setStyle(Paint.Style.STROKE)
+      canvas.drawOval(rect, paint)
+      paint.setStyle(Paint.Style.FILL)
+      if (swaps >= leveler.pointsPerSwap) {
         canvas.drawOval(rect, paint)
-        paint.setStyle(Paint.Style.FILL)
-        if (swaps >= leveler.pointsPerSwap) {
-          canvas.drawOval(rect, paint)
-        } else if (swaps > 0) {
-          canvas.drawArc(rect, -90, swaps*360/leveler.pointsPerSwap, true, paint)
-        }
-        swaps -= leveler.pointsPerSwap
-        n += 1
+      } else if (swaps > 0) {
+        canvas.drawArc(rect, -90, swaps*360/leveler.pointsPerSwap, true, paint)
       }
+      swaps -= leveler.pointsPerSwap
+      n += 1
     }
   }
 
@@ -297,13 +270,26 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   def displayScores()(implicit canvas: Canvas): Unit = {
     val score = math.round(math.ceil(displayScore))
     canvas.drawText(s"$score", canvas.getWidth/2, indent+swapSize/2-textCenter.getFontMetrics.ascent/2, textCenter)
-    val recordPaint = textRight
+
+    val recordPaint = boldRight
     val record = Settings.scoreFor(leveler.isChallenge)
-    if (!leveler.tutorial && score > record) {
+    if (!leveler.tutorial && score > record && record > 0) {
       recordPaint.setColor(TileType.strokeBetween(displayScore-record))
     }
     recordPaint.setTextSize(36)
-    canvas.drawText(if (leveler.tutorial) "Tutorial" else f"Record: ${max(score, record)}", canvas.getWidth-indent, indent+swapSize/2-recordPaint.getFontMetrics.ascent/2, recordPaint)
+
+    val recordText = {
+      if (leveler.tutorial)
+        "Tutorial"
+      else if (record == 0)
+        "First Game"
+      else if (score >= record)
+        "New Record"
+      else
+        f"Record: ${max(score, record)}"
+    }
+    canvas.drawText(recordText, canvas.getWidth-indent, indent+swapSize/2-recordPaint.getFontMetrics.ascent/2, recordPaint)
+
     for (text <- leveler.displayText) {
       val textSplit = text.split('\n')
       for (index <- textSplit.indices) {
@@ -371,32 +357,31 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       }
 
       val time = System.currentTimeMillis() - startTime
-      val moveTime = 250.0f
-      val fadeStart = moveTime * 2
-      if (time > fadeStart + moveTime) {
+      val fadeStart = animateTime * 2
+      if (time > fadeStart + animateTime) {
         return
       }
 
-      val heightOffset = ((tileSize + tileSpacing) / 2.0f) * towards(0.0f, 1.0f, time / moveTime)
+      val heightOffset = ((tileSize + tileSpacing) / 2.0f) * towards(0.0f, 1.0f, time / animateTime)
       val opacity = {
         if (time < fadeStart) {
           1.0f
         } else {
-          towards(1.0f, 0.0f, (time - fadeStart) / moveTime)
+          towards(1.0f, 0.0f, (time - fadeStart) / animateTime)
         }
       }
 
       val paint = boldCenter
       paint.setTextSize(math.min(50 + score, 100))
 
-      val text = s"+${score}"
+      val text = s"+$score"
       val x = position.x
       val y = position.y + paint.getFontMetrics.ascent/2 - heightOffset
 
       val borderPaint = new Paint(paint)
       borderPaint.setStyle(Paint.Style.STROKE)
       borderPaint.setStrokeWidth(10)
-      borderPaint.setColor(0xffffff | (((1 - math.sqrt(1 - opacity)) * 255).toInt << 24))
+      borderPaint.setColor((TileType.brightBackground & 0xffffff) | (((1 - math.sqrt(1 - opacity)) * 255).toInt << 24))
       canvas.drawText(text, x, y, borderPaint)
 
       paint.setColor((ColorManager.color & 0xffffff) | ((opacity * 255).toInt << 24))
