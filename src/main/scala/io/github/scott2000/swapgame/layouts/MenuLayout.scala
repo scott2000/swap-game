@@ -7,16 +7,18 @@ import android.widget.LinearLayout
 
 object MenuLayout {
   def title[LP <: ViewGroupLayoutParams[_, STextView]](text: String)(implicit ctx: Context, defaultLayoutParam: (STextView) ⇒ LP): STextView = {
-    updateTitle(STextView(text)
+    updateTitle(transparentBackground(STextView(text)
       .textSize(Grid.titleSize)
       .typeface(Grid.typeface)
-      .padding(Grid.tileSpacing))
+      .padding(Grid.tileSpacing)))
+  }
+
+  def transparentBackground(textView: STextView): STextView = {
+    textView.backgroundColor(0)
   }
 
   def updateTitle(textView: STextView): STextView = {
-    textView
-      .backgroundColor(TileType.backgroundColor)
-      .textColor(TileType.strokeColor)
+    textView.textColor(TileType.strokeColor)
   }
 }
 

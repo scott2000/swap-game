@@ -49,7 +49,11 @@ package object swapgame {
   def setAlpha(color: Int, alpha: Float): Int = (((color >>> 24)*alpha).toInt << 24) | (color & 0x00ffffff)
 
   def colorAverage(from: Int, to: Int, part: Float = 0.5f): Int = {
-    def shiftAverage(shift: Int): Int = (math.round(((from >>> shift) & 0xff)*(1-part)+((to >>> shift) & 0xff)*part) & 0xff) << shift
+    def shiftAverage(shift: Int): Int = {
+      val a = (from >>> shift) & 0xff
+      val b = (to >>> shift) & 0xff
+      math.max(math.min(math.round(math.sqrt((a*a)*(1-part) + (b*b)*part)).toInt, 0xff), 0) << shift
+    }
     shiftAverage(24) | shiftAverage(16) | shiftAverage(8) | shiftAverage(0)
   }
 }

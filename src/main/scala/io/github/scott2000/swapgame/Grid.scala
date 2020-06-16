@@ -180,6 +180,8 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   def this(tutorial: Boolean, challenge: Boolean, size: (Int, Int))(implicit ctx: Context) = this(if (tutorial) new Leveler() else new Leveler(0, size, challenge, Leveler.defaultInitializer))(ctx)
   def this(tutorial: Boolean, challenge: Boolean)(implicit ctx: Context) = this(tutorial, challenge, (4, 5))
 
+  val record: Int = Settings.scoreFor(leveler.isChallenge)
+
   private var age: Long = 0
 
   private var startX = 0.0f
@@ -255,7 +257,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   }
 
   def displayMoveHint()(implicit canvas: Canvas): Unit = {
-    paint.setStrokeWidth(3.0f)
+    paint.setStrokeWidth(4.0f)
     paint.setStyle(Paint.Style.STROKE)
     val moveTime = (System.currentTimeMillis()-lastMove)%hintSum
     if (moveTime > hintDelay && moveTime < hintEnd) {
@@ -272,7 +274,6 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
     canvas.drawText(s"$score", canvas.getWidth/2, indent+swapSize/2-textCenter.getFontMetrics.ascent/2, textCenter)
 
     val recordPaint = boldRight
-    val record = Settings.scoreFor(leveler.isChallenge)
     if (!leveler.tutorial && score > record && record > 0) {
       recordPaint.setColor(TileType.strokeBetween(displayScore-record))
     }
@@ -283,10 +284,10 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
         "Tutorial"
       else if (record == 0)
         "First Game"
-      else if (score >= record)
+      else if (score > record)
         "New Record"
       else
-        f"Record: ${max(score, record)}"
+        s"Record: $record"
     }
     canvas.drawText(recordText, canvas.getWidth-indent, indent+swapSize/2-recordPaint.getFontMetrics.ascent/2, recordPaint)
 
@@ -372,7 +373,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       }
 
       val paint = boldCenter
-      paint.setTextSize(math.min(50 + score, 100))
+      paint.setTextSize(math.min((time * time)/(2.0f * animateTime) + 5.0f, math.min(50.0f + score, 100.0f)))
 
       val text = s"+$score"
       val x = position.x
@@ -380,7 +381,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
 
       val borderPaint = new Paint(paint)
       borderPaint.setStyle(Paint.Style.STROKE)
-      borderPaint.setStrokeWidth(10)
+      borderPaint.setStrokeWidth(12)
       borderPaint.setColor((TileType.brightBackground & 0xffffff) | (((1 - math.sqrt(1 - opacity)) * 255).toInt << 24))
       canvas.drawText(text, x, y, borderPaint)
 
