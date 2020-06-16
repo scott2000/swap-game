@@ -24,7 +24,11 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
 
   override def uuid: State = GameOver
 
-  private def formatSub(text: STextView): STextView = text.textColor(TileType.strokeColor).textSize(Grid.subSize).typeface(Grid.typeface)
+  private def formatSub(text: STextView): STextView = {
+    MenuLayout.transparentBackground(text)
+      .textSize(Grid.subSize)
+      .typeface(Grid.typeface)
+  }
 
   private val messageBox = MenuLayout.title(?).wrap
   private val scoreBox = formatSub(STextView(?)).wrap
