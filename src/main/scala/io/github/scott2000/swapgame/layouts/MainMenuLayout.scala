@@ -4,10 +4,7 @@ import org.scaloid.common._
 import android.view.View
 import android.animation.LayoutTransition
 import android.content._
-import android.content.Intent
-import android.net.Uri
 import View.{GONE, VISIBLE}
-import android.widget.Toast
 
 class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Menu
@@ -15,8 +12,8 @@ class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   private val title          = MenuLayout.title("Swap").wrap
   private val playButton     = SButton(    "Play", play).wrap
   private val colorsButton   = SButton(  "Colors", colors).wrap
+  private val scoresButton   = SButton(  "Scores", MenuActivity.instance.showLeaderboard).wrap
   private val settingsButton = SButton("Settings", settings).wrap
-  private val signInButton   = SButton( "Sign In", signIn).wrap
 
   refresh()
 
@@ -34,24 +31,18 @@ class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
 
   private def settings(): Unit = MenuActivity.switchTo(Options)
 
-  private def signIn(): Unit = {
-    if (!MenuActivity.isConnected) {
-      MenuActivity.instance.startSignIn()
-    }
-  }
-
   override def refresh(): Unit = {
     changeAPI()
     MenuLayout.updateTitle(title)
-    colorsButton.visibility = if (ColorManager.unlocked.length > 1) VISIBLE else GONE
     playButton.setBackgroundTintList(colorStateList)
   }
 
   override def changeAPI(): Unit = {
-    if (MenuActivity.isConnecting || MenuActivity.isConnected) {
-      signInButton.visibility = GONE
+    colorsButton.visibility = if (ColorManager.unlocked.length > 1) VISIBLE else GONE
+    if (MenuActivity.isConnected) {
+      scoresButton.visibility = VISIBLE
     } else {
-      signInButton.visibility = VISIBLE
+      scoresButton.visibility = GONE
     }
   }
 

@@ -35,7 +35,7 @@ object ColorManager extends BitObject {
     }
   }
 
-  def unlockAll(score: Int, chain: Int): Array[UIColor] = {
+  def unlockAll(score: Int, chain: Int = 0): Array[UIColor] = {
     val colorBuffer = new ArrayBuffer[UIColor]()
     for (color <- UIColor.colors if color.requirement.shouldUnlock(score, chain) && !_unlocked.contains(color)) {
       _unlocked += color

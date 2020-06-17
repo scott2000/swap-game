@@ -26,6 +26,7 @@ class GameLayout()(implicit ctx: Context) extends MenuLayout {
     super.refresh()
     gameView.start()
   }
+  
   override def clean(): Unit = gameView.stop()
 
   override def showFrom(previous: MenuLayout): Unit = {
