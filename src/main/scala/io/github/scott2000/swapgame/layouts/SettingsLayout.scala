@@ -35,9 +35,7 @@ class SettingsLayout()(implicit ctx: Context) extends MenuLayout {
   }
 
   private def leaderboard(): Unit = {
-    if (MenuActivity.isConnected) {
-      MenuActivity.instance.showLeaderboard()
-    }
+    MenuActivity.instance.showLeaderboard()
   }
 
   def openWebsite(): Unit = {

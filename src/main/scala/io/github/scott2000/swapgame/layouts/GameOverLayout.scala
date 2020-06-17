@@ -79,7 +79,12 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
   def updateGameStats(highScore: Int, score: Int, bestChain: Int, colors: Array[UIColor], leveler: Leveler): Unit = {
     this.synchronized {
       val isRecord = score > highScore
-      messageText = if (isRecord) "New Record" else "Game Over"
+      messageText = {
+        if (isRecord && highScore != 0)
+          "New Record"
+        else
+          "Game Over"
+      }
       scoreText = s"Score: $score"
       chainText = s"Longest Chain: $bestChain"
       if (isRecord) {
