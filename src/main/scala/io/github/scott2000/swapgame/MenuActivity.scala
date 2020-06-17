@@ -93,6 +93,13 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     isConnected = true
     Settings.shouldConnect = true
     Settings.update()
+    Settings.save()
+    layout.changeAPI()
+  }
+
+  override def onConnectionSuspended(i: Int): Unit = {
+    isConnecting = false
+    isConnected = false
     layout.changeAPI()
   }
 
@@ -105,6 +112,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
         case exception: IntentSender.SendIntentException => {
           System.out.println("Games API resolution => SendIntentException")
           Settings.shouldConnect = false
+          Settings.save()
           isConnecting = false
         }
       }
@@ -114,27 +122,27 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     layout.changeAPI()
   }
 
-  override def onActivityResult(i: Int, state: Int, intent: Intent): Unit = {
-    if (i == RC_ERROR_RESOLVE) {
-      if (state == Activity.RESULT_OK) {
+  override def onActivityResult(requestCode: Int, responseCode: Int, data: Intent): Unit = {
+    if (requestCode == RC_ERROR_RESOLVE) {
+      if (responseCode == Activity.RESULT_OK) {
         apiClient.connect()
       } else {
-        if (state == Activity.RESULT_CANCELED) {
+        if (responseCode == Activity.RESULT_CANCELED) {
           Settings.shouldConnect = false
+          Settings.save()
         } else {
           System.out.println("Games API resolution failed")
         }
         isConnecting = false
       }
       layout.changeAPI()
+    } else if (responseCode == GamesActivityResultCodes.RESULT_RECONNECT_REQUIRED) {
+      isConnected = false
+      apiClient.disconnect()
+      Settings.shouldConnect = false
+      Settings.save()
+      layout.changeAPI()
     }
-  }
-
-  override def onConnectionSuspended(i: Int): Unit = {
-    isConnecting = true
-    isConnected = false
-    layout.changeAPI()
-    apiClient.connect()
   }
 
   def layout: MenuLayout = states(state)
@@ -176,6 +184,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
 
   onResume {
     continueFullscreen()
+    layout.refresh()
   }
 
   onStop {
@@ -184,10 +193,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
   }
 
   onPause {
-    Settings.save()
-    for (grid <- Grid.grid) {
-      grid.save()
-    }
+    layout.clean()
   }
 
   def showLeaderboard(): Unit = if (isConnected) {

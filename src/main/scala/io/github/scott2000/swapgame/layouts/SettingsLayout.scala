@@ -6,6 +6,7 @@ import android.content._
 import View.{GONE, VISIBLE}
 import android.animation.LayoutTransition
 import android.net.Uri
+import com.google.android.gms.common.SignInButton
 
 class SettingsLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Options
@@ -13,9 +14,14 @@ class SettingsLayout()(implicit ctx: Context) extends MenuLayout {
   private val title          = MenuLayout.title("Settings").wrap
   private val darkModeButton = SButton(              ?, toggleDark).wrap
   private val tutorialButton = SButton("Show Tutorial", showTutorial).wrap
-  private val scoresButton   = SButton(  "Leaderboard", leaderboard).wrap
   private val websiteButton  = SButton( "Open Website", openWebsite).wrap
   private val backButton     = SButton(         "Back", back).wrap
+
+  private val signInButton = new SignInButton(ctx).wrap
+  signInButton.setStyle(SignInButton.SIZE_STANDARD, SignInButton.COLOR_LIGHT)
+  signInButton.setOnClickListener((_: View) => MenuActivity.instance.startSignIn())
+  signInButton.backgroundColor = 0
+  this += signInButton
 
   refresh()
 
@@ -32,10 +38,6 @@ class SettingsLayout()(implicit ctx: Context) extends MenuLayout {
     Settings.enableTutorial()
     Grid.create(false)
     MenuActivity.switchTo(Game)
-  }
-
-  private def leaderboard(): Unit = {
-    MenuActivity.instance.showLeaderboard()
   }
 
   def openWebsite(): Unit = {
@@ -61,10 +63,10 @@ class SettingsLayout()(implicit ctx: Context) extends MenuLayout {
   }
 
   override def changeAPI(): Unit = {
-    if (MenuActivity.isConnected) {
-      scoresButton.visibility = VISIBLE
+    if (MenuActivity.isConnected || MenuActivity.isConnecting) {
+      signInButton.visibility = GONE
     } else {
-      scoresButton.visibility = GONE
+      signInButton.visibility = VISIBLE
     }
   }
 

@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.{min, max, pow, sqrt, round}
 
 object Grid extends Reader[Grid] {
-  def endGame(leveler: Leveler, bestChain: Int, colorBuffer: ArrayBuffer[(UIColor, Long)])(implicit ctx: Context): Unit = {
+  def endGame(leveler: Leveler, bestChain: Int, colorBuffer: ArrayBuffer[(UIColor, Long)], bestCombo: Int)(implicit ctx: Context): Unit = {
     MenuActivity.switchTo(GameOver)
     val gameOverLayout = MenuActivity.layout[GameOverLayout](GameOver)
     if (leveler.tutorial) {
@@ -29,7 +29,8 @@ object Grid extends Reader[Grid] {
         colors += color
       }
       gameOverLayout.updateGameStats(Settings.scoreFor(leveler.isChallenge), leveler.score, bestChain, colors.toArray, leveler)
-      Settings.addScore(leveler.score, leveler.isChallenge)
+      Settings.addScore(leveler.score, Settings.indexForLeaderboard(leveler.isChallenge))
+      Settings.addScore(bestCombo, Settings.comboLeaderboard)
       new File(ctx.getFilesDir, saveFile(leveler.isChallenge)).delete()
     }
   }
@@ -62,7 +63,7 @@ object Grid extends Reader[Grid] {
 
   val endTime: Int = round(5000+animateTime)
 
-  val saveVersion: Byte = 0
+  val saveVersion: Byte = 1
 
   val typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
   val typefaceBold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
@@ -141,7 +142,14 @@ object Grid extends Reader[Grid] {
       colorBuffer += ((reader.read(UIColor, version), System.currentTimeMillis-10000))
     }
     val bestChain = reader.readByte()
-    new Grid(leveler, swaps, lastSwap, bestChain, colorBuffer)
+    val bestCombo = {
+      if (version >= 1) {
+        reader.readByte()
+      } else {
+        0
+      }
+    }
+    new Grid(leveler, swaps, lastSwap, bestChain, colorBuffer, bestCombo)
   }
 
   def load(challenge: Boolean)(implicit ctx: Context): Unit = {
@@ -169,16 +177,23 @@ object Grid extends Reader[Grid] {
   var grid: Option[Grid] = None
 }
 
-class Grid private (val leveler: Leveler, private var swapPoints: Int,
-  private var lastSwap: Option[(PositionWhole, PositionWhole)] = None,
-  var bestChain: Int = 0, private var colorBuffer: ArrayBuffer[(UIColor, Long)] = new ArrayBuffer[(UIColor, Long)]())
+class Grid private (
+                     val leveler: Leveler,
+                     private var swapPoints: Int,
+                     private var lastSwap: Option[(PositionWhole, PositionWhole)] = None,
+                     var bestChain: Int = 0,
+                     private var colorBuffer: ArrayBuffer[(UIColor, Long)] = new ArrayBuffer[(UIColor, Long)](),
+                     private var bestCombo: Int = 0)
   (implicit val ctx: Context) extends Writable {
 
   import Grid._
 
-  def this(leveler: Leveler)(implicit ctx: Context) = this(leveler, leveler.maxSwapPoints)(ctx)
-  def this(tutorial: Boolean, challenge: Boolean, size: (Int, Int))(implicit ctx: Context) = this(if (tutorial) new Leveler() else new Leveler(0, size, challenge, Leveler.defaultInitializer))(ctx)
-  def this(tutorial: Boolean, challenge: Boolean)(implicit ctx: Context) = this(tutorial, challenge, (4, 5))
+  def this(leveler: Leveler)(implicit ctx: Context) =
+    this(leveler, leveler.maxSwapPoints)(ctx)
+  def this(tutorial: Boolean, challenge: Boolean, size: (Int, Int))(implicit ctx: Context) =
+    this(if (tutorial) new Leveler() else new Leveler(0, size, challenge, Leveler.defaultInitializer))(ctx)
+  def this(tutorial: Boolean, challenge: Boolean)(implicit ctx: Context) =
+    this(tutorial, challenge, (4, 5))
 
   val record: Int = Settings.scoreFor(leveler.isChallenge)
 
@@ -216,7 +231,7 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   def end(): Unit = {
     if (!endFlag) {
       endFlag = true
-      Grid.endGame(leveler, bestChain, colorBuffer)
+      Grid.endGame(leveler, bestChain, colorBuffer, bestCombo)
     }
   }
 
@@ -480,6 +495,10 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
           if (multiplier > 1) {
             scoreParticle = Some((toCenter(lastTile), score, System.currentTimeMillis()))
           }
+          if (score > bestCombo) {
+            bestCombo = score
+            Settings.addComboEarly(score)
+          }
           leveler.incrementScore(score)
           leveler.tutorialAct()
           update()
@@ -623,10 +642,11 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
       writer.write(color)
     }
     writer.write(bestChain.toByte)
+    writer.write(bestCombo.toByte)
   }
 
   def willBeDeleted(): Unit = {
-    Settings.addScore(leveler.score, leveler.isChallenge)
+    Settings.addScore(leveler.score, Settings.indexForLeaderboard(leveler.isChallenge))
   }
 
   def save(): Unit = if (!endFlag && !leveler.tutorial) {
