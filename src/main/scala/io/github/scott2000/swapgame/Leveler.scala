@@ -114,7 +114,12 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
   private var _score = 0
 
   def score: Int = _score
-  def incrementScore(increment: Int = 1): Unit = _score += increment
+
+  def incrementScore(increment: Int): Unit = {
+    Settings.addCombo(increment)
+    _score += increment
+  }
+
   def resetScore(): Unit = _score = 0
 
   def shouldExit: Boolean = _exit

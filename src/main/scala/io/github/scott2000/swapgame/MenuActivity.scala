@@ -20,7 +20,6 @@ object MenuActivity {
   val inFullscreen: Int = outFullscreen | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 
   def switchTo(state: State): Boolean = {
-    println(s"Switching State: ${MenuActivity.state} -> $state")
     for (instance <- _instance) {
       if (instance.layout to MenuActivity(state)) {
         MenuActivity.state = state
@@ -66,7 +65,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     .build()
 
   def startConnection(): Unit = {
-    if (!isConnected && !isConnecting) {
+    if (Settings.shouldConnect && !isConnected && !isConnecting) {
       isConnecting = true
       apiClient.connect()
     }
@@ -99,11 +98,15 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
 
   override def onConnectionFailed(connectionResult: ConnectionResult): Unit = {
     isConnected = false
-    if (connectionResult.hasResolution() && !isConnecting && Settings.shouldConnect) {
+    if (Settings.shouldConnect) {
       try {
         connectionResult.startResolutionForResult(this, RC_ERROR_RESOLVE)
       } catch {
-        case exception: IntentSender.SendIntentException => apiClient.connect()
+        case exception: IntentSender.SendIntentException => {
+          System.out.println("Games API resolution => SendIntentException")
+          Settings.shouldConnect = false
+          isConnecting = false
+        }
       }
     } else {
       isConnecting = false
@@ -115,9 +118,13 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
     if (i == RC_ERROR_RESOLVE) {
       if (state == Activity.RESULT_OK) {
         apiClient.connect()
-      } else if (state == Activity.RESULT_CANCELED) {
+      } else {
+        if (state == Activity.RESULT_CANCELED) {
+          Settings.shouldConnect = false
+        } else {
+          System.out.println("Games API resolution failed")
+        }
         isConnecting = false
-        Settings.shouldConnect = false
       }
       layout.changeAPI()
     }

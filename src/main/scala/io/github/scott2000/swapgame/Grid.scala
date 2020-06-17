@@ -224,7 +224,6 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
     this.synchronized {
       age += 1
       leveler.update(time)
-      val moveTime = System.currentTimeMillis()-lastMove
       if (!isAlive) {
         end()
       }
@@ -579,14 +578,12 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   def recommendSwap: Option[PositionWhole] = recommendSwap(restrict=false)
 
   def recommendSwap(restrict: Boolean): Option[PositionWhole] = {
-    for (position <- leveler.indices; check <- leveler.grid(position)) {
-      if (!check.static) {
-        for ((xd, yd) <- Array((-1, 0), (1, 0), (0, -1), (0, 1))) {
-          val position2 = PositionWhole(position.x+xd, position.y+yd)
-          for (that <- leveler.grid(position2)) {
-            if (that.canSwapWith(check) && (!restrict || !wasLast(position, position2))) {
-              return Some(position)
-            }
+    for (position <- leveler.indices; check <- leveler.grid(position) if !check.static) {
+      for ((xd, yd) <- Array((-1, 0), (1, 0), (0, -1), (0, 1))) {
+        val position2 = PositionWhole(position.x+xd, position.y+yd)
+        for (that <- leveler.grid(position2)) {
+          if (that.canSwapWith(check) && (!restrict || !wasLast(position, position2))) {
+            return Some(position)
           }
         }
       }
@@ -608,10 +605,10 @@ class Grid private (val leveler: Leveler, private var swapPoints: Int,
   def visibleSwaps: Boolean = displaySwaps >= leveler.pointsPerSwap || swapPoints >= leveler.pointsPerSwap
   def canMove: Boolean = recommendMove.isDefined
   def canSwap: Boolean = visibleSwaps && recommendSwap.isDefined
+  
+  def isAlive: Boolean = !leveler.shouldExit && (isAnimated || canSwap || canMove)
 
-  def isAlive: Boolean = !leveler.shouldExit && (isAnimated || canMove || canSwap)
-
-  def outOfBounds(position: PositionFraction): Boolean = !leveler.inBounds(fromGrid(position, crop=false))
+  def outOfBounds(position: PositionFraction): Boolean = !leveler.inBounds(fromGrid(position))
   def writeWith(writer: BitWriter): Unit = {
     writer.write(Grid.saveVersion)
     writer.write(leveler)

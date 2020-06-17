@@ -11,10 +11,12 @@ import android.content.Context
 
 object Settings extends BitObject {
   private var isLoaded = false
-  val version: Byte = 2
-  val leaderboards = Array(Some("CgkItbTPhNUKEAIQBw"), Some("CgkItbTPhNUKEAIQCA"))
+  val version: Byte = 3
+  val leaderboards = Array("CgkItbTPhNUKEAIQBw", "CgkItbTPhNUKEAIQCA")
+  val comboLeaderboard = "CgkItbTPhNUKEAIQCQ"
   val settingsFile = "settings"
   private val _highScores = Array(0, 0)
+  private var _bestCombo = 0
   private var _tutorial = true
   var upToDate = true
   var shouldConnect = true
@@ -36,11 +38,26 @@ object Settings extends BitObject {
   def submitScore(isChallenge: Boolean): Unit = {
     val index = if (isChallenge) 1 else 0
     val score = _highScores(index)
-    if (score > 0) {
+    if (score >= 1) {
       if (MenuActivity.isConnected) {
-        for (leaderboard <- leaderboards(index)) {
-          Games.Leaderboards.submitScore(MenuActivity.instance.apiClient, leaderboard, score)
-        }
+        Games.Leaderboards.submitScore(MenuActivity.instance.apiClient, leaderboards(index), score)
+      } else {
+        upToDate = false
+      }
+    }
+  }
+
+  def addCombo(newCombo: Int): Unit = {
+    if (newCombo > _bestCombo) {
+      _bestCombo = newCombo
+      submitCombo()
+    }
+  }
+
+  def submitCombo(): Unit = {
+    if (_bestCombo >= 6) {
+      if (MenuActivity.isConnected) {
+        Games.Leaderboards.submitScore(MenuActivity.instance.apiClient, comboLeaderboard, _bestCombo)
       } else {
         upToDate = false
       }
@@ -59,11 +76,14 @@ object Settings extends BitObject {
 
   def update(): Unit = {
     if (!upToDate && MenuActivity.isConnected) {
-      upToDate = true
       submitScore(false)
       submitScore(true)
+      submitCombo()
       for (color <- ColorManager.unlocked) {
         unlockAchievement(color)
+      }
+      if (MenuActivity.isConnected) {
+        upToDate = true
       }
     }
   }
@@ -93,6 +113,9 @@ object Settings extends BitObject {
     val version = reader.readByte()
     _highScores(0) = math.max(reader.readInt(), _highScores(0))
     _highScores(1) = math.max(reader.readInt(), _highScores(1))
+    if (version >= 3) {
+      _bestCombo = reader.readInt()
+    }
     _tutorial = reader.read()
     upToDate = reader.read()
     if (version >= 1) {
@@ -108,6 +131,7 @@ object Settings extends BitObject {
     writer.write(version)
     writer.write(scoreFor(false))
     writer.write(scoreFor(true))
+    writer.write(_bestCombo)
     writer.write(_tutorial)
     writer.write(upToDate)
     writer.write(shouldConnect)
