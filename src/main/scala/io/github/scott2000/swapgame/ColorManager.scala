@@ -35,10 +35,11 @@ object ColorManager extends BitObject {
     }
   }
 
-  def unlockAll(score: Int, chain: Int = 0): Array[UIColor] = {
+  def unlockAll(score: Int, chain: Int = 0, combo: Int = 0): Array[UIColor] = {
     val colorBuffer = new ArrayBuffer[UIColor]()
-    for (color <- UIColor.colors if color.requirement.shouldUnlock(score, chain) && !_unlocked.contains(color)) {
+    for (color <- UIColor.colors if color.requirement.shouldUnlock(score, chain, combo) && !_unlocked.contains(color)) {
       _unlocked += color
+      Settings.unlockAchievement(color)
       colorBuffer += color
       if (_unlocked.length == PlayLayout.challengeColorRequirement) {
         // represents "challenge unlocked"

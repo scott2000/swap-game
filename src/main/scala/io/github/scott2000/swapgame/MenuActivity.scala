@@ -91,7 +91,6 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
   override def onConnected(connectionHint: Bundle): Unit = {
     isConnecting = false
     isConnected = true
-    Settings.shouldConnect = true
     Settings.update()
     Settings.save()
     layout.changeAPI()
@@ -193,7 +192,7 @@ class MenuActivity extends SActivity with GoogleApiClient.ConnectionCallbacks wi
   }
 
   onPause {
-    layout.clean()
+    layout.pause()
   }
 
   def showLeaderboard(): Unit = if (isConnected) {

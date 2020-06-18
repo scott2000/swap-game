@@ -157,14 +157,14 @@ class ColorView(layout: ColorLayout)(implicit ctx: Context) extends SView with R
     threadID += 1
     val id = threadID
     println(s"Starting ColorView Thread $id...")
-    while (thread == Some(Thread.currentThread())) {
+    while (thread.contains(Thread.currentThread())) {
       if (threadID != id) {
         MenuActivity.instance.runOnUiThread { stop() }
       }
       val nextUpdate = System.currentTimeMillis
       update(nextUpdate-lastUpdate)
       lastUpdate = nextUpdate
-      Thread.sleep(8)
+      Thread.sleep(7)
     }
     println(s"Stopping ColorView Thread $id...")
   }

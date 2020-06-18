@@ -12,6 +12,7 @@ class ColorLayout()(implicit ctx: Context) extends MenuLayout {
   this += colorView
 
   override def refresh(): Unit = colorView.start()
+  override def pause(): Unit = colorView.stop()
   override def clean(): Unit = colorView.stop()
 
   override def setHidden(): Unit = {
@@ -21,7 +22,7 @@ class ColorLayout()(implicit ctx: Context) extends MenuLayout {
 
   override def showFrom(previous: MenuLayout): Unit = {
     visibility = VISIBLE
-    animate().alpha(1.0f).setListener(onEnd {})
+    animate().alpha(1.0f).setListener(doNothing)
   }
 
   override def hideForAnd(next: MenuLayout, action: => Unit): Unit = {
