@@ -13,19 +13,30 @@ import android.content.Context
 
 object Settings extends BitObject {
   private var isLoaded = false
-  val version: Byte = 4
+  val version: Byte = 5
   val settingsFile = "settings"
   val leaderboards = Array("CgkItbTPhNUKEAIQBw", "CgkItbTPhNUKEAIQCA", "CgkItbTPhNUKEAIQCQ")
   private val minLeaderboard = Array(1, 1, 3)
   private val _highScores = Array(0, 0, 0)
   private var _tutorial = true
-  var shouldConnect = true
+  private var _shouldConnect = true
   var darkMode = false
 
   var submitLeaderboard = Array(true, true, true)
   var submitAchievement = true
 
   val comboLeaderboard = 2
+
+  def shouldConnect: Boolean = _shouldConnect
+  def shouldConnect_=(connect: Boolean): Unit = {
+    if (connect) {
+      _shouldConnect = true
+    } else {
+      submitLeaderboard = Array(true, true, true)
+      submitAchievement = true
+      _shouldConnect = false
+    }
+  }
 
   def indexForLeaderboard(isChallenge: Boolean): Int = {
     if (isChallenge) 1 else 0
@@ -80,14 +91,17 @@ object Settings extends BitObject {
         override def onResult(r: Leaderboards.LoadPlayerScoreResult): Unit = {
           implicit val ctx: Context = MenuActivity.instance.ctx
           if (r.getStatus().isSuccess()) {
-            val score = r.getScore().getRawScore().toInt
-            if (score > _highScores(index)) {
-              if (index == 0 && score > 100) {
-                disableTutorial()
+            val score = r.getScore()
+            if (score != null) {
+              val rawScore = score.getRawScore().toInt
+              if (rawScore > _highScores(index)) {
+                if (index == 0 && rawScore > 100) {
+                  disableTutorial()
+                }
+                _highScores(index) = rawScore
+                ColorManager.unlockAll(rawScore)
+                MenuActivity.instance.runOnUiThread { MenuActivity.instance.layout.changeAPI() }
               }
-              _highScores(index) = score
-              ColorManager.unlockAll(score)
-              MenuActivity.instance.runOnUiThread { MenuActivity.instance.layout.changeAPI() }
             }
           } else {
             submitLeaderboard(index) = true
@@ -128,6 +142,7 @@ object Settings extends BitObject {
   }
 
   def update(): Unit = {
+    _shouldConnect = true
     if (MenuActivity.isConnected) {
       for (index <- submitLeaderboard.indices if submitLeaderboard(index)) {
         restoreLeaderboardScore(index)
@@ -137,6 +152,11 @@ object Settings extends BitObject {
         restoreAchievements()
         for (color <- ColorManager.unlocked) {
           unlockAchievement(color)
+        }
+        for (color <- UIColor.colors.reverseIterator if !ColorManager.unlocked.contains(color)) {
+          for (id <- color.requirement.id) {
+            Games.Achievements.reveal(MenuActivity.instance.apiClient, id)
+          }
         }
       }
       if (MenuActivity.isConnected) {
@@ -183,13 +203,18 @@ object Settings extends BitObject {
       for (index <- submitLeaderboard.indices) {
         submitLeaderboard(index) = reader.read()
       }
-      submitAchievement = reader.read()
+      if (version >= 5) {
+        submitAchievement = reader.read()
+      } else {
+        // Before this update, achievements were all hidden by default
+        reader.read()
+      }
     } else {
       // It doesn't matter if it was supposed to be up to date or not
       reader.read()
     }
     if (version >= 1) {
-      shouldConnect = reader.read()
+      _shouldConnect = reader.read()
       if (version >= 2) {
         darkMode = reader.read()
       }
@@ -207,7 +232,7 @@ object Settings extends BitObject {
       writer.write(submit)
     }
     writer.write(submitAchievement)
-    writer.write(shouldConnect)
+    writer.write(_shouldConnect)
     writer.write(darkMode)
     writer.write(ColorManager)
   }

@@ -4,6 +4,7 @@ import org.scaloid.common._
 import android.view.{View, Gravity}
 import android.text.{Spanned, SpannableString}
 import android.text.style.ForegroundColorSpan
+import android.graphics.Typeface
 import android.content._
 import View.{GONE, VISIBLE}
 
@@ -32,11 +33,12 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
 
   private val messageBox = MenuLayout.title(?).wrap
   private val scoreBox = formatSub(STextView(?)).wrap
-  private val chainBox = formatSub(STextView(?)).wrap
   private val highScoreBox = formatSub(STextView(?)).wrap
+  private val chainBox = formatSub(STextView(?)).wrap
   private val unlockColor = formatSub(STextView(?)).gravity(Gravity.CENTER).singleLine(false).wrap
   private val mainMenu = SButton("Main Menu", back).wrap
   mainMenu.marginTop(24)
+  unlockColor.setTypeface(null, Typeface.BOLD)
 
   refresh()
 
@@ -70,13 +72,13 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
     this.synchronized {
       messageText = "Tutorial Over"
       scoreText = "You are now ready to play."
-      chainText = "Have fun!"
       highScoreText = None
+      chainText = "Good luck!"
       setColorUnlockDisplay(Array())
     }
   }
 
-  def updateGameStats(highScore: Int, score: Int, bestChain: Int, colors: Array[UIColor], leveler: Leveler): Unit = {
+  def updateGameStats(highScore: Int, score: Int, bestChain: Int, bestCombo: Int, colors: Array[UIColor], leveler: Leveler): Unit = {
     this.synchronized {
       val isRecord = score > highScore
       messageText = {
@@ -86,11 +88,17 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
           "Game Over"
       }
       scoreText = s"Score: $score"
-      chainText = s"Longest Chain: $bestChain"
-      if (isRecord) {
-        highScoreText = None
-      } else {
-        highScoreText = Some(s"Record: $highScore")
+      highScoreText = {
+        if (isRecord)
+          None
+        else
+          Some(s"Record: $highScore")
+      }
+      chainText = {
+        if (bestCombo > 20)
+          s"Highest Combo: $bestCombo"
+        else
+          s"Longest Chain: $bestChain"
       }
       setColorUnlockDisplay(colors)
     }
@@ -100,18 +108,19 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
     this.synchronized {
       MenuLayout.updateTitle(messageBox)
       MenuLayout.updateTitle(scoreBox)
-      MenuLayout.updateTitle(chainBox)
       MenuLayout.updateTitle(highScoreBox)
+      MenuLayout.updateTitle(chainBox)
       mainMenu.setBackgroundTintList(colorStateList)
       messageBox.text = messageText
       scoreBox.text = scoreText
-      chainBox.text = chainText
-      if (highScoreText.isDefined) {
-        highScoreBox.text = highScoreText.get
-        highScoreBox.visibility = VISIBLE
-      } else {
-        highScoreBox.visibility = GONE
+      highScoreText match {
+        case None =>
+          highScoreBox.visibility = GONE
+        case Some(text) =>
+          highScoreBox.text = text
+          highScoreBox.visibility = VISIBLE
       }
+      chainBox.text = chainText
       if (unlockColorText.isDefined) {
         unlockColor.text = unlockColorText.get(0)
         for (n <- 1 until unlockColorText.get.length) {
@@ -132,7 +141,7 @@ class GameOverLayout()(implicit ctx: Context) extends MenuLayout {
   override def showFrom(previous: MenuLayout): Unit = {
     Grid.grid = None
     visibility = VISIBLE
-    animate().alpha(1.0f).setListener(onEnd {})
+    animate().alpha(1.0f).setListener(doNothing)
   }
 
   override def hideForAnd(next: MenuLayout, action: => Unit): Unit = {

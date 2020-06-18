@@ -207,12 +207,13 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
   private def fromGridIndex(index: Int): PositionWhole = PositionWhole(index%width, index/width)
 
   def staticChance: Float = {
+    def offset(start: Double): Double = 0.15 / (1 + math.exp((-score + start) / staticChanceRate))
     val wave = -0.1 * math.sin(math.Pi * score / staticChanceRate)
     if (isChallenge)
-      (staticChanceChallenge + wave).toFloat
+      (staticChanceChallenge + wave + offset(2500)).toFloat
     else {
-      val denom = 1 + math.exp(-(score - staticChanceInflection) / staticChanceRate)
-      ((staticChanceMax + wave) / denom).toFloat
+      val denom = 1 + math.exp((-score + staticChanceInflection) / staticChanceRate)
+      ((staticChanceMax + wave) / denom + offset(5000)).toFloat
     }
   }
 

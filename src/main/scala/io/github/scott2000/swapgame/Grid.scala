@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.{min, max, pow, sqrt, round}
 
 object Grid extends Reader[Grid] {
-  def endGame(leveler: Leveler, bestChain: Int, colorBuffer: ArrayBuffer[(UIColor, Long)], bestCombo: Int)(implicit ctx: Context): Unit = {
+  def endGame(leveler: Leveler, bestChain: Int, bestCombo: Int, colorBuffer: ArrayBuffer[(UIColor, Long)])(implicit ctx: Context): Unit = {
     MenuActivity.switchTo(GameOver)
     val gameOverLayout = MenuActivity.layout[GameOverLayout](GameOver)
     if (leveler.tutorial) {
@@ -28,7 +28,7 @@ object Grid extends Reader[Grid] {
       for ((color, _) <- colorBuffer) {
         colors += color
       }
-      gameOverLayout.updateGameStats(Settings.scoreFor(leveler.isChallenge), leveler.score, bestChain, colors.toArray, leveler)
+      gameOverLayout.updateGameStats(Settings.scoreFor(leveler.isChallenge), leveler.score, bestChain, bestCombo, colors.toArray, leveler)
       Settings.addScore(leveler.score, Settings.indexForLeaderboard(leveler.isChallenge))
       Settings.addScore(bestCombo, Settings.comboLeaderboard)
       new File(ctx.getFilesDir, saveFile(leveler.isChallenge)).delete()
@@ -149,11 +149,11 @@ object Grid extends Reader[Grid] {
         0
       }
     }
-    new Grid(leveler, swaps, lastSwap, bestChain, colorBuffer, bestCombo)
+    new Grid(leveler, swaps, lastSwap, bestChain, bestCombo, colorBuffer)
   }
 
   def load(challenge: Boolean)(implicit ctx: Context): Unit = {
-    if (grid == None || loaded == None || loaded.get != challenge) {
+    if (grid.isEmpty || !loaded.contains(challenge)) {
       if (hasSave(challenge) && !Settings.tutorial) {
         val bitReader = new BitReader(ctx.openFileInput(saveFile(challenge)))
         grid = Some(bitReader.read(Grid, ctx))
@@ -178,12 +178,13 @@ object Grid extends Reader[Grid] {
 }
 
 class Grid private (
-                     val leveler: Leveler,
+                     private val leveler: Leveler,
                      private var swapPoints: Int,
                      private var lastSwap: Option[(PositionWhole, PositionWhole)] = None,
-                     var bestChain: Int = 0,
-                     private var colorBuffer: ArrayBuffer[(UIColor, Long)] = new ArrayBuffer[(UIColor, Long)](),
-                     private var bestCombo: Int = 0)
+                     private var bestChain: Int = 0,
+                     private var bestCombo: Int = 0,
+                     private var colorBuffer: ArrayBuffer[(UIColor, Long)] = new ArrayBuffer[(UIColor, Long)]()
+                   )
   (implicit val ctx: Context) extends Writable {
 
   import Grid._
@@ -195,7 +196,7 @@ class Grid private (
   def this(tutorial: Boolean, challenge: Boolean)(implicit ctx: Context) =
     this(tutorial, challenge, (4, 5))
 
-  val record: Int = Settings.scoreFor(leveler.isChallenge)
+  var record: Int = Settings.scoreFor(leveler.isChallenge)
 
   private var age: Long = 0
 
@@ -231,7 +232,7 @@ class Grid private (
   def end(): Unit = {
     if (!endFlag) {
       endFlag = true
-      Grid.endGame(leveler, bestChain, colorBuffer, bestCombo)
+      Grid.endGame(leveler, bestChain, bestCombo, colorBuffer)
     }
   }
 
@@ -239,7 +240,10 @@ class Grid private (
     this.synchronized {
       age += 1
       leveler.update(time)
-      if (!isAlive) {
+      if (isAlive) {
+        // Update only before the game ends
+        record = Settings.scoreFor(leveler.isChallenge)
+      } else {
         end()
       }
       for (position <- leveler.indices; tile <- leveler.grid(position)) {
@@ -522,8 +526,8 @@ class Grid private (
     3.0f
   }
 
-  def update(score: Int = leveler.score, chain: Int = bestChain): Unit = {
-    for (color <- ColorManager.unlockAll(score, chain)) {
+  def update(score: Int = leveler.score, chain: Int = bestChain, combo: Int = bestCombo): Unit = {
+    for (color <- ColorManager.unlockAll(score, chain, combo)) {
       colorBuffer += ((color, System.currentTimeMillis))
     }
   }

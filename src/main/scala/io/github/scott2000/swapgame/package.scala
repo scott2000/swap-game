@@ -26,6 +26,8 @@ package object swapgame {
     override def onAnimationEnd(animation: Animator): Unit = action
   }
 
+  val doNothing = onEnd {}
+
   def colorStateList: ColorStateList = {
     new ColorStateList(Array(
       Array(-state_enabled),

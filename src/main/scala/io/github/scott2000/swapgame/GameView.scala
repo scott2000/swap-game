@@ -72,9 +72,7 @@ class GameView(implicit ctx: Context) extends SSurfaceView with SurfaceHolder.Ca
     }
   }
 
-  def stop(): Unit = {
-    setZOrderOnTop(false)
-    visibility = View.GONE
+  def pause(): Unit = {
     for (thread <- this.thread) {
       this.thread = None
       thread.join()
@@ -85,16 +83,22 @@ class GameView(implicit ctx: Context) extends SSurfaceView with SurfaceHolder.Ca
     }
   }
 
+  def stop(): Unit = {
+    setZOrderOnTop(false)
+    visibility = View.GONE
+    pause()
+  }
+
   override def run(): Unit = {
     threadID += 1
     val id = threadID
     println(s"Starting GameView Thread $id...")
-    while (thread == Some(Thread.currentThread())) {
+    while (thread.contains(Thread.currentThread())) {
       if (threadID != id) {
         MenuActivity.instance.runOnUiThread { stop() }
       }
       draw()
-      Thread.sleep(8)
+      Thread.sleep(7)
     }
     println(s"Stopping GameView Thread $id...")
   }

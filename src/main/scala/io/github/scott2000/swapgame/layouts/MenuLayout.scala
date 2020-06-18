@@ -33,6 +33,7 @@ trait MenuLayout extends SLinearLayout {
   private var _set = false
 
   def refresh(): Unit = {}
+  def pause(): Unit = {}
   def clean(): Unit = {}
 
   def changeAPI(): Unit = {}

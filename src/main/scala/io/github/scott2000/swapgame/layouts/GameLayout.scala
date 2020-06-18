@@ -22,11 +22,8 @@ class GameLayout()(implicit ctx: Context) extends MenuLayout {
     visibility = GONE
   }
 
-  override def refresh(): Unit = {
-    super.refresh()
-    gameView.start()
-  }
-  
+  override def refresh(): Unit = gameView.start()
+  override def pause(): Unit = gameView.pause()
   override def clean(): Unit = gameView.stop()
 
   override def showFrom(previous: MenuLayout): Unit = {

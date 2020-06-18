@@ -37,7 +37,7 @@ class PlayLayout()(implicit ctx: Context) extends MenuLayout {
 
   override def showFrom(previous: MenuLayout): Unit = {
     visibility = VISIBLE
-    animate().alpha(1.0f).setListener(onEnd {})
+    animate().alpha(1.0f).setListener(doNothing)
   }
 
   override def hideForAnd(next: MenuLayout, action: => Unit): Unit = {
