@@ -13,7 +13,7 @@ import android.content.Context
 
 object Settings extends BitObject {
   private var isLoaded = false
-  val version: Byte = 5
+  val version: Byte = 6
   val settingsFile = "settings"
   val leaderboards = Array("CgkItbTPhNUKEAIQBw", "CgkItbTPhNUKEAIQCA", "CgkItbTPhNUKEAIQCQ")
   private val minLeaderboard = Array(1, 1, 3)
@@ -22,8 +22,8 @@ object Settings extends BitObject {
   private var _shouldConnect = true
   var darkMode = false
 
-  var submitLeaderboard = Array(true, true, true)
-  var submitAchievement = true
+  private var submitLeaderboard = Array(true, true, true)
+  private var submitAchievement = true
 
   val comboLeaderboard = 2
 
@@ -43,10 +43,10 @@ object Settings extends BitObject {
   }
 
   def addScore(newScore: Int, index: Int): Unit = {
+    submitScore(newScore, index)
     if (newScore > _highScores(index)) {
       _highScores(index) = newScore
     }
-    submitScore(newScore, index)
   }
 
   def scoreFor(isChallenge: Boolean): Int = _highScores(indexForLeaderboard(isChallenge))
@@ -54,8 +54,15 @@ object Settings extends BitObject {
   def submitScore(score: Int, index: Int): Unit = {
     if (score >= minLeaderboard(index)) {
       if (MenuActivity.isConnected) {
-        Games.Leaderboards.submitScore(MenuActivity.instance.apiClient, leaderboards(index), score)
-      } else if (score > _highScores(index)) {
+        try {
+          Games.Leaderboards.submitScore(MenuActivity.instance.apiClient, leaderboards(index), score)
+          return
+        } catch {
+          case e: Exception =>
+            e.printStackTrace()
+        }
+      }
+      if (score > _highScores(index)) {
         submitLeaderboard(index) = true
       }
     }
@@ -73,12 +80,17 @@ object Settings extends BitObject {
 
   def unlockAchievement(color: UIColor): Unit = {
     if (MenuActivity.isConnected) {
-      for (id <- color.requirement.id) {
-        Games.Achievements.unlock(MenuActivity.instance.apiClient, id)
+      try {
+        for (id <- color.requirement.id) {
+          Games.Achievements.unlock(MenuActivity.instance.apiClient, id)
+        }
+        return
+      } catch {
+        case e: Exception =>
+          e.printStackTrace()
       }
-    } else {
-      submitAchievement = true
     }
+    submitAchievement = true
   }
 
   def restoreLeaderboardScore(index: Int): Unit = {
@@ -144,26 +156,31 @@ object Settings extends BitObject {
   def update(): Unit = {
     _shouldConnect = true
     if (MenuActivity.isConnected) {
-      for (index <- submitLeaderboard.indices if submitLeaderboard(index)) {
-        restoreLeaderboardScore(index)
-        submitScore(_highScores(index), index)
-      }
-      if (submitAchievement) {
-        restoreAchievements()
-        for (color <- ColorManager.unlocked) {
-          unlockAchievement(color)
+      try {
+        for (index <- submitLeaderboard.indices if submitLeaderboard(index)) {
+          submitScore(_highScores(index), index)
+          restoreLeaderboardScore(index)
         }
-        for (color <- UIColor.colors.reverseIterator if !ColorManager.unlocked.contains(color)) {
-          for (id <- color.requirement.id) {
-            Games.Achievements.reveal(MenuActivity.instance.apiClient, id)
+        if (submitAchievement) {
+          for (color <- ColorManager.unlocked) {
+            unlockAchievement(color)
           }
+          for (color <- UIColor.colors.reverseIterator if !ColorManager.unlocked.contains(color)) {
+            for (id <- color.requirement.id) {
+              Games.Achievements.reveal(MenuActivity.instance.apiClient, id)
+            }
+          }
+          restoreAchievements()
         }
-      }
-      if (MenuActivity.isConnected) {
-        for (index <- submitLeaderboard.indices) {
-          submitLeaderboard(index) = false
+        if (MenuActivity.isConnected) {
+          for (index <- submitLeaderboard.indices) {
+            submitLeaderboard(index) = false
+          }
+          submitAchievement = false
         }
-        submitAchievement = false
+      } catch {
+        case e: Exception =>
+          e.printStackTrace()
       }
     }
   }
@@ -193,29 +210,33 @@ object Settings extends BitObject {
 
   override def read(args: Any*)(implicit reader: BitReader): Unit = {
     val version = reader.readByte()
-    _highScores(0) = reader.readInt()
-    _highScores(1) = reader.readInt()
+    _highScores(indexForLeaderboard(false)) = reader.readInt()
+    _highScores(indexForLeaderboard(true)) = reader.readInt()
     if (version >= 3) {
+      // Version 3 introduced a leaderboard for best combo
       _highScores(comboLeaderboard) = reader.readInt()
     }
     _tutorial = reader.read()
-    if (version >= 4) {
+    if (version >= 6) {
+      // Version 6 ignores the previous flags since they might not be correct
       for (index <- submitLeaderboard.indices) {
         submitLeaderboard(index) = reader.read()
       }
-      if (version >= 5) {
-        submitAchievement = reader.read()
-      } else {
-        // Before this update, achievements were all hidden by default
-        reader.read()
-      }
+      submitAchievement = reader.read()
     } else {
-      // It doesn't matter if it was supposed to be up to date or not
+      if (version >= 4) {
+        // Version 4 replaced a single up-to-date flag with a set of more specific flags
+        for (_ <- submitLeaderboard.indices) {
+          reader.read()
+        }
+      }
       reader.read()
     }
     if (version >= 1) {
+      // Version 1 added a flag to stop automatic sign in when cancelled
       _shouldConnect = reader.read()
       if (version >= 2) {
+        // Version 2 introduced dark mode
         darkMode = reader.read()
       }
     }
