@@ -27,7 +27,15 @@ object TileType extends Saver[TileType] {
   case object Bold     extends TileType(  .8f, true)
   case object Heaviest extends TileType( 1.0f, true)
 
-  def randomTile(size: Int = values.length): TileType = values(random.nextInt(size))
+  def randomTile(static: Boolean): TileType = {
+    if (static) {
+      staticTiles(random.nextInt(staticTiles.length))
+    } else {
+      values(random.nextInt(values.length))
+    }
+  }
+
+  private val staticTiles: Seq[TileType] = values.filter(_.allowsStatic)
 
   private val saveMask = BitMask(values.length)
 
@@ -75,13 +83,12 @@ sealed class TileType(val partOfArea: Float, val allowsStatic: Boolean) {
 
 object Tile extends Reader[Tile] {
   def create(leveler: Leveler): Tile = {
-    val ty = TileType.randomTile(leveler.tiles)
-    val static = {
-      if (ty.allowsStatic)
-        random.nextDouble() < leveler.staticChance
-      else
-        false
-    }
+    // First decide if static, then pick valid tile. This reduces the chances
+    // of the lightest tile at higher static chances, which makes the game a
+    // tiny bit easier (since the lightest tiles are most likely to end the
+    // game, since they can't connect to surrounding static tiles).
+    val static = random.nextDouble() < leveler.staticChance
+    val ty = TileType.randomTile(static)
     new Tile(ty, static)
   }
 

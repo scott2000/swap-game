@@ -206,14 +206,18 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
   private def toGridIndex(position: PositionWhole): Int = position.x+position.y*width
   private def fromGridIndex(index: Int): PositionWhole = PositionWhole(index%width, index/width)
 
+  // The tile type used to be selected before static, and the lightest tile
+  // can't be static, so the true static chance was effectively 3/4 of the
+  // computed value. Now static is selected before tile type, so it's necessary
+  // to multiply by 0.75 to maintain the same true static chance as before.
   def staticChance: Float = {
     def offset(start: Double): Double = 0.15 / (1 + math.exp((-score + start) / staticChanceRate))
     val wave = -0.1 * math.sin(math.Pi * score / staticChanceRate)
     if (isChallenge)
-      (staticChanceChallenge + wave + offset(2500)).toFloat
+      (0.75 * (staticChanceChallenge + wave + offset(2500))).toFloat
     else {
       val denom = 1 + math.exp((-score + staticChanceInflection) / staticChanceRate)
-      ((staticChanceMax + wave) / denom + offset(5000)).toFloat
+      (0.75 * ((staticChanceMax + wave) / denom + offset(5000))).toFloat
     }
   }
 
@@ -243,11 +247,10 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
     })
   }
 
-  val tiles: Int = TileType.values.length
   private var _swaps = 3
   def swaps: Int = _swaps
 
-  def pointsPerSwap: Int = if (tutorial) 3 else tiles
+  def pointsPerSwap: Int = if (tutorial) 3 else 4
   def maxSwapPoints: Int = swaps*pointsPerSwap
 
   def update(time: Long): Unit = {
