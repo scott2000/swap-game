@@ -15,10 +15,14 @@ proguardCache in Android ++= Seq("org.scaloid")
 proguardOptions in Android ++= Seq("-dontobfuscate", "-dontoptimize", "-keepattributes Signature", "-printseeds target/seeds.txt", "-printusage target/usage.txt"
   , "-dontwarn scala.collection.**" // required from Scala 2.11.4
   , "-dontwarn org.scaloid.**" // this can be omitted if current Android Build target is android-16
+  , "-dontwarn androidx.**"
 )
 
+resolvers += "Google" at "https://dl.google.com/android/maven2"
+
 libraryDependencies += "org.scaloid" %% "scaloid" % "4.2"
-libraryDependencies += "com.google.android.gms" % "play-services" % "8.4.0"
+libraryDependencies += "com.google.android.gms" % "play-services-games" % "8.4.0"
+// Build tools version 25.0.3 required
 
 run <<= run in Android
 install <<= install in Android
