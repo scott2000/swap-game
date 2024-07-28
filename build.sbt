@@ -7,7 +7,7 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 scalaVersion := "2.11.7"
 scalacOptions in Compile += "-feature"
 
-platformTarget in Android := "android-29"
+platformTarget in Android := "android-34"
 
 updateCheck in Android := {}
 proguardCache in Android ++= Seq("org.scaloid")
@@ -22,7 +22,9 @@ resolvers += "Google" at "https://dl.google.com/android/maven2"
 
 libraryDependencies += "org.scaloid" %% "scaloid" % "4.2"
 libraryDependencies += "com.google.android.gms" % "play-services-games" % "8.4.0"
-// Build tools version 25.0.3 required
+// Need to copy "sdk/build-tools/25.0.3/lib/dx.jar" into "sdk/build-tools/<VERSION>/lib"
+// Need to run `apksigner sign --ks-key-alias <KEY> --ks <KEYSTORE> <APK>` to sign generated APKs
+// Can use `adb install <APK>` after signing with key from project.properties
 
 run <<= run in Android
 install <<= install in Android
