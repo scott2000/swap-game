@@ -5,11 +5,6 @@ import io.github.scott2000.bitManager.{BitReader, BitWriter, Writable, Reader}
 import scala.collection.mutable.ArrayBuffer
 
 object Leveler extends Reader[Leveler] {
-  val staticChanceChallenge: Float = 0.53f
-  val staticChanceMax: Float = 0.5f
-  val staticChanceInflection: Float = 1000.0f
-  val staticChanceRate: Float = 500.0f
-
   def defaultInitializer(leveler: Leveler, position: PositionWhole): Option[Tile] = Some(Tile.create(leveler))
 
   def read(args: Any*)(implicit reader: BitReader): Leveler = {
@@ -206,19 +201,17 @@ class Leveler private (val width: Int, val height: Int, val isChallenge: Boolean
   private def toGridIndex(position: PositionWhole): Int = position.x+position.y*width
   private def fromGridIndex(index: Int): PositionWhole = PositionWhole(index%width, index/width)
 
-  // The tile type used to be selected before static, and the lightest tile
-  // can't be static, so the true static chance was effectively 3/4 of the
-  // computed value. Now static is selected before tile type, so it's necessary
-  // to multiply by 0.75 to maintain the same true static chance as before.
   def staticChance: Float = {
-    def offset(start: Double): Double = 0.15 / (1 + math.exp((-score + start) / staticChanceRate))
-    val wave = -0.1 * math.sin(math.Pi * score / staticChanceRate)
-    if (isChallenge)
-      (0.75 * (staticChanceChallenge + wave + offset(2500))).toFloat
-    else {
-      val denom = 1 + math.exp((-score + staticChanceInflection) / staticChanceRate)
-      (0.75 * ((staticChanceMax + wave) / denom + offset(5000))).toFloat
+    def logistic(inflection: Double): Double = 1.0 / (1 + math.exp((inflection - score) / 500))
+    val cosCurve = math.cos(math.Pi * score / 300)
+    val chance = {
+      if (isChallenge) {
+        0.35 - 0.1 * cosCurve + 0.15 * logistic(2500)
+      } else {
+        (0.3 - 0.15 * cosCurve) * logistic(500) + 0.15 * logistic(4000)
+      }
     }
+    chance.toFloat
   }
 
   lazy val indices: Array[PositionWhole] = {
