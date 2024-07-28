@@ -300,6 +300,8 @@ class Grid private (
     val recordText = {
       if (leveler.tutorial)
         "Tutorial"
+      else if (Settings.showDifficultyLevel)
+        f"Difficulty: ${leveler.staticChance * 100}%.1f"
       else if (record == 0)
         "First Game"
       else if (score > record)

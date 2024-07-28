@@ -22,6 +22,9 @@ object Settings extends BitObject {
   private var _shouldConnect = true
   var darkMode = false
 
+  // Not saved
+  var showDifficultyLevel = false
+
   private var submitLeaderboard = Array(true, true, true)
   private var submitAchievement = true
 

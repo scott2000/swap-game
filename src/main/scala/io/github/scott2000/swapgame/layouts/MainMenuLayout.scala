@@ -9,11 +9,15 @@ import View.{GONE, VISIBLE}
 class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   override def uuid: State = Menu
 
-  private val title          = MenuLayout.title("Swap").wrap
+  private val title          = MenuLayout.title("Swap").onClick(titleClick).wrap
   private val playButton     = SButton(    "Play", play).wrap
   private val colorsButton   = SButton(  "Colors", colors).wrap
   private val scoresButton   = SButton(  "Scores", MenuActivity.instance.showLeaderboard).wrap
   private val settingsButton = SButton("Settings", settings).wrap
+
+  // If a user clicks the title exactly 12 times, show difficulty level
+  private val clickCountTarget = 12
+  private var clickCount = 0
 
   refresh()
 
@@ -30,6 +34,12 @@ class MainMenuLayout()(implicit ctx: Context) extends MenuLayout {
   private def colors(): Unit = MenuActivity.switchTo(Color)
 
   private def settings(): Unit = MenuActivity.switchTo(Options)
+
+  private def titleClick(): Unit = {
+    clickCount += 1
+    Settings.showDifficultyLevel = clickCount == clickCountTarget
+    clickCount %= clickCountTarget
+  }
 
   override def refresh(): Unit = {
     changeAPI()
